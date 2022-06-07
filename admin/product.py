@@ -13,6 +13,7 @@ from project.core.swagger import swagger_response
 
 from database import SessionLocal
 
+
 class ProductReq(BaseModel):
     name: str = Field(...)
     quantity: int = Field(...)
@@ -22,12 +23,18 @@ class ProductReq(BaseModel):
 
 
 class ProductRes(BaseModel):
-    product_id: int = Field(...)
-    name: str = Field(...)
-    quantity: int = Field(...)
-    price: Decimal = Field(...)
-    description: str = Field(...)
-    category: str = Field(...)
+    # product_id: int = Field(...)
+    # name: str = Field(...)
+    # quantity: int = Field(...)
+    # price: Decimal = Field(...)
+    # description: str = Field(...)
+    # category: str = Field(...)
+    product_id: int = Field(None)
+    name: str = Field(None)
+    quantity: int = Field(None)
+    price: Decimal = Field(None)
+    description: str = Field(None)
+    category: str = Field(None)
 
 
 router = APIRouter()
@@ -58,21 +65,43 @@ async def create_product(product: ProductReq = Body(..., example=product_create)
         success_status_code=status.HTTP_200_OK
     )
 )
-async def get_products(product: ProductRes,
-                       # page: int = Query(1, description="Trang"),
-                       # size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
-                       name: str = Query(None, description="Tên sản phẩm"),
-                       category: str = Query(None, description="Loại ngành hàng"),
-                       product_id: str = Query(None, description="Mã sản phẩm"),
-                       # from_price: Decimal = Query(None, description="Khoảng giá giới hạn dưới"),
-                       # to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
-                       sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
-                       ):
+async def get_products(
+        # page: int = Query(1, description="Trang"),
+        # size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
+        name: str = Query(None, description="Tên sản phẩm"),
+        category: str = Query(None, description="Loại ngành hàng"),
+        product_id: str = Query(None, description="Mã sản phẩm"),
+        from_price: Decimal = Query(None, description="Khoảng giá giới hạn dưới"),
+        to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
+        sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
+):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f"SELECT * FROM products")
-    l = [ProductRes(product_id=product.product_id, name=product.name, quantity=product.quantity,
-                    price=product.price, category=product.category, description=product.description)]
-    return PageResponse(data=l)
+    query = "SELECT * FROM ecommerce.products"
+    if name or category or product_id or from_price or to_price:
+        query += "WHERE"
+    if name is not None:
+        query += f"NAME LIKE '%{name}%'"
+
+    queries: CursorResult = session.execute(
+        f"SELECT * FROM ecommerce.products WHERE name = '{name}' OPERATOR"
+        f"(SELECT * FROM ecommerce.products WHERE product_id = {product_id})")
+        # f"SELECT * FROM products WHERE price > {from_price} AND price < {to_price} IS NULL OR "
+        # f"SELECT * FROM products ORDER BY time_create {sort_direction}")
+
+
+    # result = []
+    # result.append(queries)
+    # chunk = []
+    # for query in queries:
+    #     chunk.append(query)
+    # result = []
+    # while size < len(chunk):
+    #     result = chunk[0: size + size]
+    #     size += size
+    #     result.append(chunk)
+    # result[{'page': len(queries4)%size}]
+    session.commit()
+    return PageResponse(data=queries)
 
 
 @router.get(
