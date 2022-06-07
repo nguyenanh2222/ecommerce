@@ -1,9 +1,14 @@
+from enum import Enum
+
 import uvicorn
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from admin.order import router as order_router
 from admin.product import router as product_router
+from customer.cart import router as cart_router
+from customer.order import router as customer_order_router
 
 app = FastAPI(
     title="ecommerce",
@@ -22,10 +27,19 @@ app.add_middleware(
     allow_headers=["POST", "GET"],
 )
 
+
+class Tags(str, Enum):
+    customer = "[Customer]"
+    admin = "[Admin]"
+
+
 router = APIRouter(prefix="/api/v1")
-router.include_router(router=product_router, prefix="/products")
+router.include_router(router=product_router, prefix="/products", tags=[Tags.admin])
+router.include_router(router=order_router, prefix="/orders", tags=[Tags.admin])
+
+router.include_router(router=customer_order_router, prefix="/customers/orders", tags=[Tags.customer])
+router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
 
 app.include_router(router)
-
 if __name__ == "__main__":
     uvicorn.run('main:app', host="127.0.0.1", port=8000, reload=True, env_file=".env")
