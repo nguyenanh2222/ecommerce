@@ -42,4 +42,4 @@ router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.c
 
 app.include_router(router)
 if __name__ == "__main__":
-    uvicorn.run('main:app', host="127.0.0.1", port=8000, reload=True, env_file=".env")
+    uvicorn.run('main:app', host="127.0.0.1", port=8001, reload=True, env_file=".env")

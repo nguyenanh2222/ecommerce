@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query, Body
 from pydantic import BaseModel, Field
 from starlette import status
 
-from project.core import PageResponse, Sort, DataResponse
+from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
 
 

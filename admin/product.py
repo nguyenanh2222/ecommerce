@@ -7,7 +7,7 @@ from starlette import status
 from starlette.responses import Response
 
 from admin.examples.product import product_create
-from project.core import DataResponse, PageResponse
+from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
 from project.core.swagger import swagger_response
 
