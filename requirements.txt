@@ -1,0 +1,51 @@
+#framework
+fastapi~=0.76.0
+fastapi-utils==0.2.1
+fast-boot-security==0.0.7
+python-dotenv==0.18.0 #https://pypi.org/project/python-dotenv/
+pydantic~=1.9.0
+
+#logger
+loguru==0.5.3 #https://pypi.org/project/loguru/
+aiohttp==3.7.4.post0 #https://pypi.org/project/aiohttp/
+
+#server
+uvicorn~=0.17.6
+
+orjson==3.5.4 #https://pypi.org/project/orjson/3.5.4/
+
+#orm
+SQLAlchemy==1.4.18 #https://docs.sqlalchemy.org/en/14/
+
+#jwt
+PyJWT #https://pypi.org/project/PyJWT/
+
+#msgpack
+msgpack #https://pypi.org/project/msgpack/
+
+#engine
+cx-Oracle==8.2.1 #https://pypi.org/project/cx-Oracle/8.2.1/
+motor==2.4.0 #https://pypi.org/project/motor/2.4.0/
+
+#python-ldap==3.3.1 #https://pypi.org/project/python-ldap/3.3.1/
+
+#handle file req/res
+python-multipart==0.0.5 #https://pypi.org/project/python-multipart/
+
+aioredis==2.0.0 #https://pypi.org/project/aioredis/2.0.0/
+
+python-slugify==5.0.2 #https://pypi.org/project/python-slugify/
+python-magic==0.4.25 #https://pypi.org/project/python-magic/
+uvloop==0.15.2 #https://pypi.org/project/uvloop/
+
+# format code
+pre-commit==2.13.0 #https://pypi.org/project/pre-commit/2.13.0/
+
+#generetor model
+sqlacodegen==2.3.0 #https://pypi.org/project/sqlacodegen/2.3.0/
+
+requests
+pytest
+pytest-dotenv
+
+starlette~=0.18.0
