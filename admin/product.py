@@ -49,7 +49,7 @@ async def create_product(product: ProductReq = Body(..., example=product_create)
     _rs: CursorResult = session.execute(
         f"""INSERT INTO products (name, quantity, price, description, category) 
         VALUES ('{product.name}', {product.quantity}, {product.price},
-                '{product.description}', '{product.category}') RETURNING  product_id """
+                '{product.description}', '{product.category}') RETURNING product_id """
     )
     session.commit()
     print(_rs.scalar())
@@ -69,22 +69,27 @@ async def get_products(
         size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
         name: str = Query(None, description="Tên sản phẩm"),
         category: str = Query(None, description="Loại ngành hàng"),
-        product_id: str = Query(None, description="Mã sản phẩm"),
+        product_id: int = Query(None, description="Mã sản phẩm"),
         from_price: Decimal = Query(None, description="Khoảng giá giới hạn dưới"),
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
     session = SessionLocal()
-    query = "SELECT * FROM ecommerce.products"
+    _rs = "SELECT * FROM ecommerce.products"
     if name or category or product_id or from_price or to_price:
-        query += "WHERE"
+        _rs += "WHERE"
     if name is not None:
-        query += f" name LIKE '%{name}%'"
-    _rs = CursorResult = session.execute(query)
-
+        _rs += f" name LIKE '%{name}%' ORDER BY {sort_direction}"
+    if product_id is not None:
+        _rs += f" product_id = {product_id} ORDER BY {sort_direction}"
+    if from_price and to_price is not None:
+        _rs += f""" price BETWEEN {from_price} AND {to_price} 
+        ORDER BY {sort_direction}"""
+    if page and size is not None:
+        _rs += f" LIMIT {size} OFFSET {(page-1)*size} "
+    _result: CursorResult = session.execute(_rs)
     session.commit()
-
-    return PageResponse(data=None)
+    return PageResponse(data=_result.fetchall())
 
 
 @router.get(
