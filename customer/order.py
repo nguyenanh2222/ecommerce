@@ -9,12 +9,12 @@ from project.core.swagger import swagger_response
 
 
 class OrderReq(BaseModel):
-    amount: Decimal = Field(...)
+    total_amount: Decimal = Field(...)
 
 
 class OrderRes(BaseModel):
     order_id: int = Field(...)
-    amount: Decimal = Field(...)
+    total_amount: Decimal = Field(...)
 
 
 router = APIRouter()
