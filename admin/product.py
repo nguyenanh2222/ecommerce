@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, Path
 from h11 import Response
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
@@ -85,7 +85,7 @@ async def get_products(
         _rs += f""" price BETWEEN {from_price} AND {to_price} 
         ORDER BY {sort_direction}"""
     if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page-1)*size} "
+        _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
     _result: CursorResult = session.execute(_rs)
     session.commit()
     return PageResponse(data=_result.fetchall())
@@ -128,15 +128,14 @@ async def update_product(id: int, product: ProductReq):
     return DataResponse(data=_rs.first())
 
 
-@router.delete(
-    path="/{id}",
-    responses=status.HTTP_204_NO_CONTENT
-    )
-
-async def delete_product(id: int):
-    session = SessionLocal()
-    _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id} RETURNING * ')
-    session.commit()
-    return Response()
+# @router.delete(
+#     path="/{id_}",
+#     responses=status.HTTP_204_NO_CONTENT
+# )
+# async def delete_product(id_: str = Path(...)):
+#     session = SessionLocal()
+#     _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id_}')
+#     session.commit()
+#     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # how return lai http204??

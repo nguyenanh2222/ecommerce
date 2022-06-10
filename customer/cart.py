@@ -9,7 +9,7 @@ from starlette import status
 from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 from database import SessionLocal
-
+from customer.cart_items import CartItemReq
 
 class CartReq(BaseModel):
     ...
@@ -44,7 +44,6 @@ async def get_cart(customer_id: int = Query(...)):
     return DataResponse(data=_rs.first())
 
 
-
 @router.put(
     path="/items",
     description="Thêm một item vào giỏ hàng",
@@ -64,12 +63,12 @@ async def add_item_to_cart(
     JOIN ecommerce.products AS p
     ON c.product_id = p.product_id
     WHERE c.customer_id = {customer_id} and c.product_id = {product_id}"""
-    )
+                                        )
     tup = _rs.fetchone()
 
     item.unit_price = int(tup[1])
     item.total_products = tup[2]
-    item.total_price = tup[1]*tup[2]
+    item.total_price = tup[1] * tup[2]
 
     item.total_price = item.unit_price * item.total_products
     _rs: CursorResult = session.execute(f""" 

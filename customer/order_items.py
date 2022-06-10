@@ -14,10 +14,7 @@ from customer.cart import CartItemReq
 
 router = APIRouter()
 
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
 class OrderItemsReq(BaseModel):
     customer_name: str = Field(...)
     product_name: str = Field(...)
@@ -47,7 +44,6 @@ class OrderItemsRes(BaseModel):
 )
 async def add_order_items(item: OrderItemsReq = Body(...),
                           id: int = Query(...)):
-
     session = SessionLocal()
 
     item.unit_price = CartItemReq.unit_price

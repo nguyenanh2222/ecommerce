@@ -7,6 +7,7 @@ from sqlalchemy.engine import CursorResult
 from starlette import status
 
 from database import SessionLocal
+from order_status import EOrderStatus
 from project.core.schemas import PageResponse, Sort
 from project.core.swagger import swagger_response
 
@@ -69,15 +70,17 @@ async def get_orders(
 )
 async def change_order_status(
         id: int = Path(..., description="Mã hóa đơn cần thay đổi trạng thái"),
-        next_status: str = Query(..., description="Trạng thái đơn hàng muốn thay đổi"),
+        next_status: EOrderStatus = Query(..., description="Trạng thái đơn hàng muốn thay đổi"),
 ):
-    session = SessionLocal()
-    _rs: CursorResult = session.execute(
-        f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
-    )
-    session.commit()
-    return PageResponse(data=_rs.fetchall())
-    # return Response(status_code=status.HTTP_204_NO_CONTENT)
-    # return Response(status_code=status.HTTP_204_NO_CONTENT)
-    # return Response(status_code=status.HTTP_204_NO_CONTENT)
-    # return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return {
+        "id": id,
+        "status": next_status
+    }
+    # session = SessionLocal()
+    # _rs: CursorResult = session.execute(
+    #     f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
+    # )
+    # session.commit()
+    # return PageResponse(data=_rs.fetchall())
+
+

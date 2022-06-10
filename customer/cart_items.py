@@ -12,10 +12,7 @@ from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
 
 
-router = APIRouter()
-
-
-class CartItemsReq(BaseModel):
+class CartItemReq(BaseModel):
     unit_price: float = Field(...)
     product_quantity: int = Field(...)
     total_price: int = Field(...)
@@ -26,4 +23,4 @@ class CartItemsRes(BaseModel):
     product_id: int = Field(None)
     customer_id: int = Field(None)
 
-@router.post
+# @router.post
