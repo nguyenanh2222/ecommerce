@@ -135,5 +135,5 @@ async def update_product(id: int, product: ProductReq):
 )
 async def delete_product(id: int):
     session = SessionLocal()
-    _rs = session.execute(f'DELETE  FROM products WHRER product_id = {id}')
+    _rs = session.execute(f'DELETE  FROM products WHERE product_id = {id}')
     return Response(status_code=status.HTTP_204_NO_CONTENT)

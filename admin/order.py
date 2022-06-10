@@ -1,3 +1,4 @@
+
 from datetime import datetime
 from decimal import Decimal
 
@@ -47,35 +48,20 @@ async def get_orders(
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc")
 ):
     session = SessionLocal()
-    query = f"SELECT * FROM ecommerce.orders AS o " \
-            f"LEFT JOIN ecommerce.customers  AS c on  o.customer_id = c.customer_id " \
-            f"LEFT JOIN ecommerce.products  AS p ON o.product_id = p.product_id " \
-            f"ORDER BY current_time {sort_direction}"
-
+    _rs: CursorResult = session.execute(f"""SELECT * FROM ecommerce.orders AS o
+    RIGHT JOIN ecommerce.order_items AS oi ON o.order_id = oi.order_id """)
     if product_name or customer_name or order_id:
-        query += "WHERE"
+        _rs += "WHERE"
     if product_name is not None:
-        query += f" product_name LIKE '%{product_name}%'"
+        _rs += f" product_name LIKE '%{product_name}% ORDER BY {sort_direction}'"
     if customer_name is not None:
-        query += f" customer_name LIKE '%{customer_name}%'"
+        _rs += f" customer_name LIKE '%{customer_name}%' ORDER BY {sort_direction}"
     if order_id is not None:
-        query += f" order_id = {order_id}"
-
-    _rs = CursorResult = session.execute(query)
-    result = []
-    result.append(query)
-    chunk = []
-    for q in query:
-        chunk.append(query)
-    result = []
-    while size < len(chunk):
-        result = chunk[0: size + size]
-        size += size
-    result.append(chunk)
-    page_len = len(query) % size
-    result.append({'page': page_len})
+        _rs += f" order_id = {order_id} ORDER BY {sort_direction}"
+    if page and size is not None:
+        _rs += f" LIMIT {size} OFFSET {(page-1)*size} "
     session.commit()
-    return PageResponse(data=result)
+    return PageResponse(data=_rs.fetchall())
 
 
 @router.put(
@@ -89,10 +75,8 @@ async def change_order_status(
 ):
     session = SessionLocal()
     _rs: CursorResult = session.execute(
-        f"SELECT * CASE "
-        f"WHEN status = {id}"
-        f"THEN '{next_status}'"
-        f"END "
-        f"FROM ecommmerce.orders"
+        f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
     )
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    session.commit()
+    return PageResponse(data=_rs.fetchall())
+    # return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -2,24 +2,27 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Query, Path
 from pydantic import BaseModel, Field
+from sqlalchemy.engine import CursorResult
 from starlette import status
 from starlette.responses import Response
 
+from database import SessionLocal
 from project.core.schemas import PageResponse, Sort
 from project.core.swagger import swagger_response
-
+from datetime import datetime
 
 class OrderReq(BaseModel):
     total_amount: Decimal = Field(...)
     total_order: int = Field(...)
     product_price: Decimal = Field(...)
-    time_hire: timestamp = Field(...)
+    time_hire: datetime = Field(...)
+
 class OrderRes(BaseModel):
-    order_id: int = Field(...)
-    total_amount: Decimal = Field(...)
-    product_quantity: int = Field(...)
-    unit_price: int = Field(...)
-    customer_id: int = Field(...)
+    order_id: int = Field(None)
+    total_amount: Decimal = Field(None)
+    product_quantity: int = Field(None)
+    unit_price: int = Field(None)
+    customer_id: int = Field(None)
 
 
 router = APIRouter()
@@ -42,9 +45,17 @@ async def get_orders(
         customer_name: str = Query(None, description="Tên khách hàng"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc")
 ):
+
     session = SessionLocal()
-    query = f" SELECT * FROM orders " \
-            f"WHERE DateField >= '2010-01-01' " \
-            f"AND DateField < '2012-01-01'"
-   _rs: CursorResult= session.execute(query)
-    return PageResponse(data=result)
+    _rs = "SELECT * FROM ecommerce.products"
+    if order_id or product_name or customer_name:
+        _rs += "WHERE"
+    if product_name is not None:
+        _rs += f" product_name LIKE '%{product_name}%' ORDER BY {sort_direction}"
+    if customer_name is not None:
+        _rs += f" product_id = {customer_name} ORDER BY {sort_direction}"
+    if page and size is not None:
+        _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
+    _result: CursorResult = session.execute(_rs)
+    session.commit()
+    return PageResponse(data=_result.fetchall())

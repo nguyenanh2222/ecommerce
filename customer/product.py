@@ -23,12 +23,6 @@ class ProductReq(BaseModel):
 
 
 class ProductRes(BaseModel):
-    # product_id: int = Field(...)
-    # name: str = Field(...)
-    # quantity: int = Field(...)
-    # price: Decimal = Field(...)
-    # description: str = Field(...)
-    # category: str = Field(...)
     product_id: int = Field(None)
     name: str = Field(None)
     quantity: int = Field(None)
