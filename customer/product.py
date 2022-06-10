@@ -11,7 +11,7 @@ from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
 from project.core.swagger import swagger_response
 
-from database import SessionLocal
+from database import SessionLocal, session
 
 
 class ProductReq(BaseModel):
@@ -60,8 +60,8 @@ async def create_product(product: ProductReq = Body(..., example=product_create)
     )
 )
 async def get_products(
-        # page: int = Query(1, description="Trang"),
-        # size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
+        page: int = Query(1, description="Trang"),
+        size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
         name: str = Query(None, description="Tên sản phẩm"),
         category: str = Query(None, description="Loại ngành hàng"),
         product_id: str = Query(None, description="Mã sản phẩm"),
@@ -69,33 +69,21 @@ async def get_products(
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
-    session = SessionLocal()
-    query = "SELECT * FROM ecommerce.products"
+    _rs = "SELECT * FROM ecommerce.products"
     if name or category or product_id or from_price or to_price:
-        query += "WHERE"
+        _rs += "WHERE"
     if name is not None:
-        query += f"NAME LIKE '%{name}%'"
-
-    queries: CursorResult = session.execute(
-        f"SELECT * FROM ecommerce.products WHERE name = '{name}' OPERATOR"
-        f"(SELECT * FROM ecommerce.products WHERE product_id = {product_id})")
-        # f"SELECT * FROM products WHERE price > {from_price} AND price < {to_price} IS NULL OR "
-        # f"SELECT * FROM products ORDER BY time_create {sort_direction}")
-
-
-    # result = []
-    # result.append(queries)
-    # chunk = []
-    # for query in queries:
-    #     chunk.append(query)
-    # result = []
-    # while size < len(chunk):
-    #     result = chunk[0: size + size]
-    #     size += size
-    #     result.append(chunk)
-    # result[{'page': len(queries4)%size}]
+        _rs += f" name LIKE '%{name}%' ORDER BY {sort_direction}"
+    if product_id is not None:
+        _rs += f" product_id = {product_id} ORDER BY {sort_direction}"
+    if from_price and to_price is not None:
+        _rs += f""" price BETWEEN {from_price} AND {to_price} 
+        ORDER BY {sort_direction}"""
+    if page and size is not None:
+        _rs += f" LIMIT {size} OFFSET {(page-1)*size} "
+    _result: CursorResult = session.execute(_rs)
     session.commit()
-    return PageResponse(data=queries)
+    return PageResponse(data=_result.fetchall())
 
 
 @router.get(
@@ -107,19 +95,23 @@ async def get_products(
     )
 )
 async def get_product(id: int):
-    return DataResponse(data=None)
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(f" SELECT * FROM ecommerce.products WHERE product_id = {id} ")
+    return DataResponse(data=_rs.first())
 
 
-@router.put(
-    path="/{id}",
-    status_code=status.HTTP_200_OK,
-    responses=swagger_response(
-        response_model=DataResponse[ProductRes],
-        success_status_code=status.HTTP_200_OK
-    )
-)
-async def update_product(id: int):
-    return DataResponse(data=None)
+# @router.put(
+#     path="/{id}",
+#     status_code=status.HTTP_200_OK,
+#     responses=swagger_response(
+#         response_model=DataResponse[ProductRes],
+#         success_status_code=status.HTTP_200_OK
+#     )
+# )
+# async def update_product(id: int):
+#     session = SessionLocal()
+#     _rs: CursorResult = session.execute(f" UPDATE ecommerce.products SET  ")
+#     return DataResponse(data=None)
 
 
 @router.delete(
@@ -127,4 +119,7 @@ async def update_product(id: int):
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_product(id: int):
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+     session = SessionLocal()
+     _rs: CursorResult = session.execute(f" DELETE FROM ecommerce.products WHERE product_id = {id}")
+     session.commit()
+     return Response(status_code=status.HTTP_204_NO_CONTENT)

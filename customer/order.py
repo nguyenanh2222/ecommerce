@@ -10,6 +10,8 @@ from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
 from datetime import datetime
 import order_status
+
+
 class OrderReq(BaseModel):
     total_amount: Decimal = Field(...)
     time_hire: datetime = Field(...)
@@ -78,7 +80,30 @@ async def place_order(
     session = SessionLocal()
     _rs: CursorResult = session.execute(
         f""" INSERT INTO ecommerce.orders () 
-        VALUES status = {order.status} 
+        VALUES status = {order_status.OPEN_ORDER} 
+        WHERE customer_id = {customer_id} RETURNING *"""
+    )
+    session.commit()
+    return PageResponse(data=_rs.fetchall())
+
+@router.put(
+    path="/",
+    status_code=status.HTTP_201_CREATED,
+    description="Chốt đơn",
+    responses=swagger_response(
+        response_model=DataResponse[OrderRes],
+        success_status_code=status.HTTP_201_CREATED
+    )
+)
+async def place_order(
+        customer_id: int = Query(...),
+        order: OrderReq = Body(...),
+
+):
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(
+        f""" INSERT INTO ecommerce.orders () 
+        VALUES status = {order_status.OPEN_ORDER} 
         WHERE customer_id = {customer_id} RETURNING *"""
     )
     session.commit()
