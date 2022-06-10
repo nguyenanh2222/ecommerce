@@ -59,3 +59,5 @@ async def get_orders(
     _result: CursorResult = session.execute(_rs)
     session.commit()
     return PageResponse(data=_result.fetchall())
+
+# Thong ke theo ngay thang chua lam xong

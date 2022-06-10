@@ -2,10 +2,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Body, Query
+from h11 import Response
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
 from starlette import status
-from starlette.responses import Response
 
 from admin.examples.product import product_create
 from database import SessionLocal
@@ -27,7 +27,7 @@ class ProductRes(BaseModel):
     product_id: int = Field(None)
     name: str = Field(None)
     quantity: int = Field(None)
-    price: Decimal = Field(None)
+    price: float = Field(None)
     description: str = Field(None)
     category: str = Field(None)
     time_create: datetime = Field(...)
@@ -49,11 +49,10 @@ async def create_product(product: ProductReq = Body(..., example=product_create)
     _rs: CursorResult = session.execute(
         f"""INSERT INTO products (name, quantity, price, description, category) 
         VALUES ('{product.name}', {product.quantity}, {product.price},
-                '{product.description}', '{product.category}') RETURNING product_id """
+                '{product.description}', '{product.category}') RETURNING *"""
     )
     session.commit()
-    print(_rs.scalar())
-    return DataResponse(data=None)
+    return DataResponse(data=_rs.first())
 
 
 @router.get(
@@ -131,10 +130,13 @@ async def update_product(id: int, product: ProductReq):
 
 @router.delete(
     path="/{id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
+    responses=status.HTTP_204_NO_CONTENT
+    )
+
 async def delete_product(id: int):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f'DELETE  FROM products WHERE product_id = {id} RETURNING *')
-    # return Response(status_code=status.HTTP_204_NO_CONTENT)
-    return DataResponse(_rs.first())
+    _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id} RETURNING * ')
+    session.commit()
+    return Response()
+
+# how return lai http204??

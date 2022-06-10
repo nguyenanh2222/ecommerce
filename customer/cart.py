@@ -11,15 +11,12 @@ from project.core.swagger import swagger_response
 from database import SessionLocal
 
 
-class CartItemReq(BaseModel):
-    unit_price: Decimal = Field(...)
-    total_price: Decimal = Field(...)
-    total_products: int = Field(...)
-
+class CartReq(BaseModel):
+    ...
 
 
 class CartRes(BaseModel):
-    item: List[CartItemReq] = Field([])
+    item: List[CartReq] = Field([])
     product_id: int = Field(None)
     customer_id: int = Field(None)
 
@@ -56,7 +53,9 @@ async def get_cart(customer_id: int = Query(...)):
         success_status_code=status.HTTP_200_OK
     )
 )
-async def add_item_to_cart(product_id: int, customer_id: int = Query(...), item: CartItemReq = Body(...)):
+async def add_item_to_cart(
+        product_id: int, customer_id: int = Query(...),
+        item: CartItemReq = Body(...)):
     session = SessionLocal()
     _rs: CursorResult = session.execute(f"""SELECT cart_id, unit_price, total_products
     FROM ecommerce.cart AS c
@@ -74,14 +73,11 @@ async def add_item_to_cart(product_id: int, customer_id: int = Query(...), item:
 
     item.total_price = item.unit_price * item.total_products
     _rs: CursorResult = session.execute(f""" 
-    UPDATE cart 
-    SET unit_price = {item.unit_price}, 
+    INSERT INTO ecommerce.cart 
+    VALUES unit_price = {item.unit_price}, 
     total_product = {item.total_products},
     total_price = {item.total_price}
     WHERE cart_id = {tup[0]}
     """)
-
-    # cart_id -> product_id -> customer_id -> doi quantity, unit price-> total price
-    # het quanttuity -> delete product_name
     session.commit()
     return DataResponse(data=None)

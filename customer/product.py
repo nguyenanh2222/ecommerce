@@ -99,21 +99,6 @@ async def get_product(id: int):
     _rs: CursorResult = session.execute(f" SELECT * FROM ecommerce.products WHERE product_id = {id} ")
     return DataResponse(data=_rs.first())
 
-
-# @router.put(
-#     path="/{id}",
-#     status_code=status.HTTP_200_OK,
-#     responses=swagger_response(
-#         response_model=DataResponse[ProductRes],
-#         success_status_code=status.HTTP_200_OK
-#     )
-# )
-# async def update_product(id: int):
-#     session = SessionLocal()
-#     _rs: CursorResult = session.execute(f" UPDATE ecommerce.products SET  ")
-#     return DataResponse(data=None)
-
-
 @router.delete(
     path="/{id}",
     status_code=status.HTTP_204_NO_CONTENT,

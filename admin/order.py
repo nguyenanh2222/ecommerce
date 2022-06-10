@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from decimal import Decimal
 
@@ -6,7 +5,6 @@ from fastapi import APIRouter, Query, Path
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult
 from starlette import status
-from starlette.responses import Response
 
 from database import SessionLocal
 from project.core.schemas import PageResponse, Sort
@@ -79,4 +77,7 @@ async def change_order_status(
     )
     session.commit()
     return PageResponse(data=_rs.fetchall())
+    # return Response(status_code=status.HTTP_204_NO_CONTENT)
+    # return Response(status_code=status.HTTP_204_NO_CONTENT)
+    # return Response(status_code=status.HTTP_204_NO_CONTENT)
     # return Response(status_code=status.HTTP_204_NO_CONTENT)

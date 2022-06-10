@@ -9,7 +9,7 @@ from admin.order import router as order_router
 from admin.product import router as product_router
 from customer.cart import router as cart_router
 from customer.order import router as customer_order_router
-
+from customer.order_items import router as customer_order_items_router
 app = FastAPI(
     title="ecommerce",
     description="ecommerce description",
@@ -39,6 +39,9 @@ router.include_router(router=order_router, prefix="/orders", tags=[Tags.admin])
 
 router.include_router(router=customer_order_router, prefix="/customers/orders", tags=[Tags.customer])
 router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
+router.include_router(router=customer_order_items_router, prefix="/customers/orders", tags=[Tags.customer])
+
+
 
 app.include_router(router)
 if __name__ == "__main__":
