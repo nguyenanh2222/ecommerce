@@ -10,7 +10,7 @@ from starlette.responses import Response
 from database import SessionLocal
 from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
-from customer.cart import CartItemReq
+
 
 router = APIRouter()
 

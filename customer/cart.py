@@ -81,3 +81,7 @@ async def add_item_to_cart(
     """)
     session.commit()
     return DataResponse(data=None)
+
+
+class CartItemReq:
+    pass

@@ -14,7 +14,10 @@ from customer.cart import CartItemReq
 
 router = APIRouter()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 class OrderItemsReq(BaseModel):
     customer_name: str = Field(...)
     product_name: str = Field(...)
