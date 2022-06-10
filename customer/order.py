@@ -74,37 +74,13 @@ async def get_orders(
 )
 async def place_order(
         customer_id: int = Query(...),
-        order: OrderReq = Body(...),
-
-):
+        order: OrderReq = Body(...)):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(
-        f""" INSERT INTO ecommerce.orders () 
-        VALUES status = {order_status.OPEN_ORDER} 
-        WHERE customer_id = {customer_id} RETURNING *"""
-    )
-    session.commit()
-    return PageResponse(data=_rs.fetchall())
 
-@router.put(
-    path="/",
-    status_code=status.HTTP_201_CREATED,
-    description="Chốt đơn",
-    responses=swagger_response(
-        response_model=DataResponse[OrderRes],
-        success_status_code=status.HTTP_201_CREATED
-    )
-)
-async def place_order(
-        customer_id: int = Query(...),
-        order: OrderReq = Body(...),
-
-):
-    session = SessionLocal()
     _rs: CursorResult = session.execute(
-        f""" INSERT INTO ecommerce.orders () 
-        VALUES status = {order_status.OPEN_ORDER} 
-        WHERE customer_id = {customer_id} RETURNING *"""
+        f""" INSERT INTO ecommerce.orders ( status, time_hire, total_amount )
+        VALUES status = {order_status.OPEN_ORDER}, time_hire = {order.time_hire}, total_amount = {order.total_amount}
+        RETURNING *"""
     )
     session.commit()
     return PageResponse(data=_rs.fetchall())
