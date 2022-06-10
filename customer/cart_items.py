@@ -26,4 +26,4 @@ class CartItemsRes(BaseModel):
     product_id: int = Field(None)
     customer_id: int = Field(None)
 
-@router.post
+# @router.post
