@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import List
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult
 from starlette import status
@@ -11,12 +11,13 @@ from project.core.swagger import swagger_response
 from database import SessionLocal
 from customer.cart_items import CartItemReq
 
+
 class CartReq(BaseModel):
     ...
 
 
 class CartRes(BaseModel):
-    item: List[CartReq] = Field([])
+    items: List[CartReq] = Field([])
     product_id: int = Field(None)
     customer_id: int = Field(None)
 
@@ -34,14 +35,15 @@ router = APIRouter()
 )
 async def get_cart(customer_id: int = Query(...)):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f""" SELECT * FROM ecommerce.cart AS c 
-        RIGHT JOIN ecommerce.customers AS c2
-        ON c.customer_id = c2.customer_id 
-        JOIN ecommerce.products AS p
-        ON c.product_id = p.product_id
-        WHERE c.customer_id = {customer_id}""")
+    _rs: CursorResult = session.execute(f""" 
+    SELECT * FROM customers c 
+	join cart ca 
+	on c.customer_id = ca.customer_id 
+	join cart_items ci 
+	on ca.cart_id = ci.cart_id 
+	where ca.customer_id = {customer_id}""")
 
-    return DataResponse(data=_rs.first())
+    return DataResponse(data=_rs.fetchall())
 
 
 @router.put(
@@ -53,32 +55,21 @@ async def get_cart(customer_id: int = Query(...)):
     )
 )
 async def add_item_to_cart(
-        product_id: int, customer_id: int = Query(...),
-        item: CartItemReq = Body(...)):
+        customer_id: int = Query(...),
+        item: CartItemReq = Body(...)
+):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f"""SELECT cart_id, unit_price, total_products
-    FROM ecommerce.cart AS c
-    RIGHT JOIN ecommerce.customers AS c2
-    ON c.customer_id = c2.customer_id
-    JOIN ecommerce.products AS p
-    ON c.product_id = p.product_id
-    WHERE c.customer_id = {customer_id} and c.product_id = {product_id}"""
-                                        )
-    tup = _rs.fetchone()
-
-    item.unit_price = int(tup[1])
-    item.total_products = tup[2]
-    item.total_price = tup[1] * tup[2]
-
-    item.total_price = item.unit_price * item.total_products
-    _rs: CursorResult = session.execute(f""" 
-    INSERT INTO ecommerce.cart 
-    VALUES unit_price = {item.unit_price}, 
-    total_product = {item.total_products},
-    total_price = {item.total_price}
-    WHERE cart_id = {tup[0]}
-    """)
+    _rs: CursorResult = session.execute(f""" SELECT * FROM customers c
+    RIGHT JOIN cart ca ON c.customer_id = ca.customer_id WHERE ca.customer_id = {customer_id}""")
+    if _rs.first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    _rs_cart: CursorResult = session.execute(f"""SELECT cart_id FROM cart WHERE customer_id = {customer_id}""")
+    _cart_id = int(_rs_cart.fetchone()[0])
+    _item: CursorResult = session.execute(f"""INSERT INTO cart_items 
+        (cart_id, quantity, total_price, unit_price, product_id) 
+        VALUES ({_cart_id}, {item.quantity}, {item.quantity * item.unit_price}, {item.unit_price}, {item.product_id})""")
     session.commit()
+
     return DataResponse(data=None)
 
 

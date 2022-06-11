@@ -14,12 +14,12 @@ from project.core.swagger import swagger_response
 
 class CartItemReq(BaseModel):
     unit_price: float = Field(...)
-    product_quantity: int = Field(...)
+    quantity: int = Field(...)
     total_price: int = Field(...)
+    product_id: int = Field(...)
 
 
 class CartItemsRes(BaseModel):
-    # item: List[CartReq] = Field([])
     product_id: int = Field(None)
     customer_id: int = Field(None)
 
