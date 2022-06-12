@@ -1,15 +1,8 @@
-# post get put
-# curd: customer
-from datetime import datetime
-from decimal import Decimal
-
 from fastapi import APIRouter, Body, Query, Path
-from h11 import Response
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
 from starlette import status
 
-from admin.examples.product import product_create
 from database import SessionLocal
 from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
@@ -110,7 +103,7 @@ async def get_customer_by_id(id : int):
     path="/{id}",
     status_code=status.HTTP_200_OK,
     responses=swagger_response(
-        response_model=DataResponse[ProductRes],
+        response_model=DataResponse[CustomerRes],
         success_status_code=status.HTTP_200_OK
     )
 )
