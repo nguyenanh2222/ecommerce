@@ -107,7 +107,7 @@ async def get_customer_by_id(id : int):
         success_status_code=status.HTTP_200_OK
     )
 )
-async def update_product(id: int, product: ProductReq):
+async def update_product(id: int, product: CustomerReq):
     session = SessionLocal()
     _rs = session.execute(
         f""" UPDATE products

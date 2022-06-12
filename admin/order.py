@@ -72,15 +72,11 @@ async def change_order_status(
         id: int = Path(..., description="Mã hóa đơn cần thay đổi trạng thái"),
         next_status: EOrderStatus = Query(..., description="Trạng thái đơn hàng muốn thay đổi"),
 ):
-    return {
-        "id": id,
-        "status": next_status
-    }
-    # session = SessionLocal()
-    # _rs: CursorResult = session.execute(
-    #     f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
-    # )
-    # session.commit()
-    # return PageResponse(data=_rs.fetchall())
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(
+        f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
+    )
+    session.commit()
+    return PageResponse(data=_rs.fetchall())
 
 
