@@ -132,10 +132,9 @@ async def update_product(id: int, product: ProductReq):
 #     path="/{id_}",
 #     responses=status.HTTP_204_NO_CONTENT
 # )
-# async def delete_product(id_: str = Path(...)):
+# async def delete_product(id_: int = Query(...)):
 #     session = SessionLocal()
 #     _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id_}')
 #     session.commit()
 #     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-# how return lai http204??
