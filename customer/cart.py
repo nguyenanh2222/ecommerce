@@ -21,11 +21,13 @@ class CartRes(BaseModel):
     customer_id: int = Field(None)
 
 
+
 class CartItemReq(BaseModel):
-    unit_price: float = Field(...)
+    price: float = Field(...)
     quantity: int = Field(...)
     total_price: int = Field(...)
     product_id: int = Field(...)
+    product_name: str = Field(...)
 
 
 class CartItemsRes(BaseModel):
@@ -57,7 +59,7 @@ async def get_cart(customer_id: int = Query(...)):
 
 @router.put(
     path="/items",
-    description="Thêm một item vào giỏ hàng",
+    description="Add Item To Cart",
     responses=swagger_response(
         response_model=DataResponse[CartRes],
         success_status_code=status.HTTP_200_OK
@@ -68,21 +70,23 @@ async def add_item_to_cart(
         item: CartItemReq = Body(...)
 ):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f""" SELECT * FROM customers c
-    RIGHT JOIN cart ca ON c.customer_id = ca.customer_id 
+    _rs: CursorResult = session.execute(f"""SELECT * FROM ecommerce.customers c
+    JOIN ecommerce.cart ca ON c.customer_id = ca.customer_id 
     WHERE ca.customer_id = {customer_id}""")
     if _rs.first() is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    _rs: CursorResult = session.execute(f"""INSERT INTO cart (customer_id) 
+    VALUES ({customer_id}) """)
     _rs_cart: CursorResult = session.execute(f"""
     SELECT cart_id FROM cart WHERE customer_id = {customer_id}""")
     _cart_id = int(_rs_cart.fetchone()[0])
     _item: CursorResult = session.execute(f"""INSERT INTO cart_items 
-        (cart_id, quantity, total_price, unit_price, product_id) 
-        VALUES ({_cart_id}, {item.quantity}, 
-        {item.quantity * item.unit_price}, {item.unit_price}, {item.product_id})""")
+        (product_name, cart_id, quantity, total_price, price, product_id) 
+        VALUES ('{item.product_name}', {_cart_id}, 
+        {item.quantity}, {item.quantity * item.price},
+        {item.price}, {item.product_id}) RETURNING *""")
     session.commit()
-
-    return DataResponse(data=None)
+    return DataResponse(data=_item.fetchone())
 
 
 class CartItemReq:

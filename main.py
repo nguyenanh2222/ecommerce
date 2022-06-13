@@ -41,7 +41,7 @@ router.include_router(router=order_router, prefix="/orders", tags=[Tags.admin])
 router.include_router(router=customer_order_router, prefix="/customers/orders", tags=[Tags.customer])
 router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
 router.include_router(router=customer_order_items_router, prefix="/customers/orders", tags=[Tags.customer])
-router.include_router(router=customers_router, prefix="/customers/customer", tags=[Tags.customer])
+router.include_router(router=customers_router, prefix="/customers", tags=[Tags.customer])
 
 
 app.include_router(router)

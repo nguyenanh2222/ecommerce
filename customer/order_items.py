@@ -19,8 +19,8 @@ class OrderItemsReq(BaseModel):
     customer_name: str = Field(...)
     product_name: str = Field(...)
     quantity: int = Field(...)
-    unit_price: float = Field(...)
-    total_price: float = Field(...)
+    price: Decimal = Field(...)
+    total_price: Decimal = Field(...)
 
 
 class OrderItemsRes(BaseModel):
@@ -29,8 +29,8 @@ class OrderItemsRes(BaseModel):
     customer_name: str = Field(None)
     product_name: str = Field(None)
     quantity: int = Field(None)
-    unit_price: float = Field(None)
-    total_price: float = Field(None)
+    price: Decimal = Field(None)
+    total_price: Decimal = Field(None)
 
 
 @router.post(
@@ -42,19 +42,14 @@ class OrderItemsRes(BaseModel):
         success_status_code=status.HTTP_201_CREATED
     )
 )
-async def add_order_items(item: OrderItemsReq = Body(...),
+async def add_order_items(item: OrderItemsRes = Body(...),
                           id: int = Query(...)):
     session = SessionLocal()
-
-    item.unit_price = CartItemReq.unit_price
-    item.total_price = CartItemReq.total_price
-    item.quantity = CartItemReq.total_products
-
-    item.total_price = item.unit_price * item.quantity
-
-    _rs: CursorResult = session.execute(f"""INSERT INTO order_id, customer_id,  order_items
-    (quantity, unit_price, total_price)
-    VALUES quantity = {item.quantity},
-    unit_price = {item.unit_price}, total_price = {item.total_price}""")
+    _rs: CursorResult = session.execute(f"""SELECT order_id from orders WHERE customer_id = {id}""")
+    print(_rs.fetchone())
+    _rs: CursorResult = session.execute(f"""INSERT INTO ecommerce.order_items 
+    (product_id, product_name, quantity, price, total_price, order_id)
+    VALUES  ({item.product_id}, '{item.product_name}', {item.quantity}, 
+    {item.price}, {item.total_price}, {item.order_id}) RETURNING *""")
     session.commit()
-    return DataResponse(data=None)
+    return DataResponse(data=_rs.fetchall())
