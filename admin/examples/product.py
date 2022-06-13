@@ -6,5 +6,5 @@ product_create = {
     "price": 125_000,
     "description": "cotton",
     "category": "quan tay",
-    "time_create": datetime.now()
+    "created_time": datetime.now()
 }

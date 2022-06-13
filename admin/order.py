@@ -39,7 +39,7 @@ router = APIRouter()
     )
 )
 async def get_orders(
-        page: int = Query(1, description="Trang"),
+        page: int = Query(1, description="Page"),
         size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
         order_id: int = Query(None, description="Mã đơn hàng"),
         product_name: str = Query(None, description="Tên sản phẩm có trong đơn hàng"),
@@ -47,8 +47,10 @@ async def get_orders(
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc")
 ):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f"""SELECT * FROM ecommerce.orders AS o
-    RIGHT JOIN ecommerce.order_items AS oi ON o.order_id = oi.order_id """)
+    _rs = f"""SELECT * FROM ecommerce.orders o
+    JOIN ecommerce.order_items oi ON o.order_id = oi.order_id """
+    if page or size is not None:
+        _rs += f"LIMIT {size} OFFSET {(page-1)*size}"
     if product_name or customer_name or order_id:
         _rs += "WHERE"
     if product_name is not None:
@@ -57,10 +59,9 @@ async def get_orders(
         _rs += f" customer_name LIKE '%{customer_name}%' ORDER BY {sort_direction}"
     if order_id is not None:
         _rs += f" order_id = {order_id} ORDER BY {sort_direction}"
-    if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page-1)*size} "
+    _result: CursorResult = session.execute(_rs)
     session.commit()
-    return PageResponse(data=_rs.fetchall())
+    return PageResponse(data=_result.fetchall())
 
 
 @router.put(

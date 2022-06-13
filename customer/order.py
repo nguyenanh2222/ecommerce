@@ -14,7 +14,7 @@ import order_status
 
 class OrderReq(BaseModel):
     total_amount: Decimal = Field(...)
-    time_hire: datetime = Field(...)
+    time_open: datetime = Field(...)
     status: str = Field(...)
 
 
@@ -22,7 +22,7 @@ class OrderRes(BaseModel):
     order_id: int = Field(...)
     customer_id: int = Field(...)
     total_amount: Decimal = Field(...)
-    time_hire: datetime = Field(...)
+    time_open: datetime = Field(...)
     status: str = Field(...)
 
 
@@ -47,20 +47,24 @@ async def get_orders(
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc"),
 ):
     session = SessionLocal()
-    _rs: CursorResult = session.execute(f"""SELECT * FROM ecommerce.orders AS o
-        RIGHT JOIN ecommerce.order_items AS oi ON o.order_id = oi.order_id """)
+    _rs= f"""SELECT * FROM ecommerce.orders o
+        JOIN ecommerce.order_items oi 
+        ON o.order_id = oi.order_id """
     if product_name or customer_id or order_id:
         _rs += "WHERE"
     if product_name is not None:
-        _rs += f" product_name LIKE '%{product_name}% ORDER BY {sort_direction}'"
+        _rs += f" product_name LIKE '%{product_name}%' OR"
     if customer_id is not None:
-        _rs += f" customer_name LIKE '%{customer_id}%' ORDER BY {sort_direction}"
+        _rs += f" customer_id = {customer_id} "
     if order_id is not None:
-        _rs += f" order_id = {order_id} ORDER BY {sort_direction}"
-    if page and size is not None:
+        _rs += f" order_id = {order_id} "
+    if sort_direction is not None:
+        _rs += f"ORDER BY time_hire "
+    if page or size is not None:
         _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
+    _result: CursorResult = session.execute(_rs)
     session.commit()
-    return PageResponse(data=_rs.fetchall())
+    return PageResponse(data=_result.fetchall())
 
 
 @router.post(
@@ -78,9 +82,11 @@ async def place_order(
     session = SessionLocal()
 
     _rs: CursorResult = session.execute(
-        f""" INSERT INTO ecommerce.orders ( status, time_hire, total_amount )
-        VALUES status = {order_status.OPEN_ORDER}, time_hire = {order.time_hire}, total_amount = {order.total_amount}
-        RETURNING *"""
+        f""" INSERT INTO ecommerce.orders 
+        (customer_id ,total_amount, status, time_open)
+        VALUES ({customer_id}, {order.total_amount}, 
+        '{order_status.EOrderStatus.OPEN_ORDER}', 
+        '{order.time_open}') RETURNING *"""
     )
     session.commit()
     return PageResponse(data=_rs.fetchall())

@@ -1,13 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from fastapi import APIRouter, Body, Query, Path
-from h11 import Response
 from pydantic import BaseModel, Field
+from requests import Response
 from sqlalchemy.engine import CursorResult, Row
 from starlette import status
-
-from admin.examples.product import product_create
+from datetime import datetime
 from database import SessionLocal
 from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
@@ -30,7 +30,7 @@ class ProductRes(BaseModel):
     price: float = Field(None)
     description: str = Field(None)
     category: str = Field(None)
-    time_create: datetime = Field(...)
+    created_time: datetime = Field(None)
 
 
 router = APIRouter()
@@ -44,12 +44,12 @@ router = APIRouter()
         success_status_code=status.HTTP_201_CREATED
     )
 )
-async def create_product(product: ProductReq = Body(..., example=product_create)):
+async def create_product(product: ProductReq = Body(...)):
     session = SessionLocal()
     _rs: CursorResult = session.execute(
-        f"""INSERT INTO products (name, quantity, price, description, category) 
+        f"""INSERT INTO ecommerce.products (name, quantity, price, description, category, created_time) 
         VALUES ('{product.name}', {product.quantity}, {product.price},
-                '{product.description}', '{product.category}') RETURNING *"""
+                '{product.description}', '{product.category}', '{product.created_time}') RETURNING *"""
     )
     session.commit()
     return DataResponse(data=_rs.first())
@@ -73,19 +73,21 @@ async def get_products(
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
-    session = SessionLocal()
+
     _rs = "SELECT * FROM ecommerce.products"
     if name or category or product_id or from_price or to_price:
-        _rs += "WHERE"
+        f'{_rs} WHERE'
     if name is not None:
-        _rs += f" name LIKE '%{name}%' ORDER BY {sort_direction}"
+        f" name LIKE '%{name}%' ORDER BY {sort_direction}"
     if product_id is not None:
-        _rs += f" product_id = {product_id} ORDER BY {sort_direction}"
+        f" product_id = {product_id} ORDER BY {sort_direction}"
     if from_price and to_price is not None:
-        _rs += f""" price BETWEEN {from_price} AND {to_price} 
+        f""" price BETWEEN {from_price} AND {to_price} 
         ORDER BY {sort_direction}"""
     if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
+        f" LIMIT {size} OFFSET {(page - 1) * size}"
+
+    session = SessionLocal()
     _result: CursorResult = session.execute(_rs)
     session.commit()
     return PageResponse(data=_result.fetchall())
@@ -128,13 +130,13 @@ async def update_product(id: int, product: ProductReq):
     return DataResponse(data=_rs.first())
 
 
-# @router.delete(
-#     path="/{id_}",
-#     responses=status.HTTP_204_NO_CONTENT
-# )
-# async def delete_product(id_: int = Query(...)):
-#     session = SessionLocal()
-#     _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id_}')
-#     session.commit()
-#     return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/{id_}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+async def delete_product(id_: int = Query(...)):
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id_}')
+    session.commit()
+    return DataResponse(data= None, status_code=status.HTTP_204_NO_CONTENT)
 

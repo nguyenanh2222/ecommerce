@@ -84,3 +84,14 @@ CREATE TABLE ecommerce.order_items (
 	CONSTRAINT order_items_fk FOREIGN KEY (product_id) REFERENCES ecommerce.products(product_id),
 	CONSTRAINT order_items_fk2 FOREIGN KEY (order_id) REFERENCES ecommerce.orders(order_id)
 );
+
+CREATE TABLE ecommerce.cart_items (
+	product_id int4 NOT NULL,
+	product_name varchar NULL,
+	quantity int4 NULL,
+	price numeric NULL,
+	total_price numeric NULL,
+	cart_id int4 NOT NULL,
+	CONSTRAINT cart_items_fk FOREIGN KEY (product_id) REFERENCES ecommerce.products(product_id),
+	CONSTRAINT cart_items_fk2 FOREIGN KEY (cart_id) REFERENCES ecommerce.cart(cart_id)
+);

@@ -99,12 +99,3 @@ async def get_product(id: int):
     _rs: CursorResult = session.execute(f" SELECT * FROM ecommerce.products WHERE product_id = {id} ")
     return DataResponse(data=_rs.first())
 
-@router.delete(
-    path="/{id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-async def delete_product(id: int):
-     session = SessionLocal()
-     _rs: CursorResult = session.execute(f" DELETE FROM ecommerce.products WHERE product_id = {id}")
-     session.commit()
-     return Response(status_code=status.HTTP_204_NO_CONTENT)
