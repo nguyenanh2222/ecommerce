@@ -69,31 +69,26 @@ async def get_products(
         product_id: int = Query(None, description="Mã sản phẩm"),
         from_price: Decimal = Query(None, description="Khoảng giá giới hạn dưới"),
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
-        sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
+        sort_direction: Sort.Direction = Query('ASC', description="Chiều sắp xếp theo ngày tạo sản phẩm ASC|DESC")
 ):
-    _rs = "SELECT * FROM ecommerce.products"
-    if name or category or product_id or from_price or to_price:
-        _rs +=f'{_rs} WHERE'
-        if name is not None:
-            _rs += f" name LIKE '%{name}%' ORDER BY {sort_direction}"
-        if product_id is not None:
-            _rs += f" product_id = {product_id} ORDER BY {sort_direction}"
-        if from_price and to_price is not None:
-            _rs += f"price BETWEEN {from_price} AND {to_price} ORDER BY {sort_direction}"
-    if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page - 1) * size}"
-    session = SessionLocal()
-    _r: CursorResult = session.execute(_rs)
-    result = _r.fetchall()
-    total_items = len(result)
-    current_page = page
-    _r: CursorResult = session.execute("SELECT product_id FROM ecommerce.products")
-    total_page = math.ceil(len(_r.fetchall())/size)
-    return PageResponse(data=result,
-                        total_page=total_page,
-                        total_items=total_items,
-                        current_page=current_page)
+    _rs = f" SELECT * FROM ecommerce.products WHERE"
+    _category = f" category LIKE '{category}'"
+    _product_id = f" product_id = {product_id}"
+    _name = f" name LIKE '{name}'"
+    _price = f" price BETWEEN {from_price} AND {to_price}"
+    _sort = f" ORDER BY created_time {sort_direction}"
+    _pagination = f" LIMIT {size} OFFSET {(page - 1)* size}"
 
+    _q = [_category, _product_id, _name, _price]
+    for index, item in enumerate(_q):
+        for i in range(index+1, len(_q)):
+            if _q[index].count('None') == 0 and _q[index].count('= None') == 0:
+                _rs += item
+                if _q[i].count('None') == 0 and _q[i].count('= None') == 0:
+                    _rs += f" AND {_q[i]}"
+            if _q[index].count('None') != 0:
+                _rs += f"{_q[i]}"
+    print(_rs)
 
 @router.get(
     path="/{id}",

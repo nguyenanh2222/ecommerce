@@ -1,21 +1,23 @@
 from decimal import Decimal
 
-from fastapi import APIRouter, Query, Path
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult
 from starlette import status
-from starlette.responses import Response
+
 
 from database import SessionLocal
 from project.core.schemas import PageResponse, Sort
 from project.core.swagger import swagger_response
 from datetime import datetime
 
+
 class OrderReq(BaseModel):
     total_amount: Decimal = Field(...)
     total_order: int = Field(...)
     product_price: Decimal = Field(...)
     time_hire: datetime = Field(...)
+
 
 class OrderRes(BaseModel):
     order_id: int = Field(None)
@@ -59,5 +61,5 @@ async def get_orders(
     _result: CursorResult = session.execute(_rs)
     session.commit()
     return PageResponse(data=_result.fetchall())
-
+# ...................................
 # Thong ke theo ngay thang chua lam xong
