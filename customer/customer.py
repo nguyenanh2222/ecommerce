@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Body, Query, Path
+from fastapi import APIRouter, Body, Path
 from pydantic import BaseModel, Field
-from sqlalchemy.engine import CursorResult, Row
+from sqlalchemy.engine import CursorResult
 from starlette import status
 
 from database import SessionLocal
-from project.core.schemas import DataResponse, PageResponse
-from project.core.schemas import Sort
+from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 
 
@@ -21,7 +20,6 @@ class CustomerReq(BaseModel):
 
 
 class CustomerRes(BaseModel):
-
     payment_method: str = Field(None)
     password: str = Field(None)
     name: str = Field(None)
@@ -31,11 +29,18 @@ class CustomerRes(BaseModel):
     username: str = Field(None)
 
 
+class CustomerUpdate(BaseModel):
+    name: str = Field(None)
+    phone: str = Field(None)
+    address: str = Field(None)
+    email: str = Field(None)
+
+
 router = APIRouter()
 
 
 @router.post(
-    path="/customer",
+    path="/",
     status_code=status.HTTP_201_CREATED,
     responses=swagger_response(
         response_model=DataResponse[CustomerRes],
@@ -58,4 +63,25 @@ async def create_customer(customer: CustomerReq = Body(...)):
     return DataResponse(data=status.HTTP_201_CREATED)
 
 
+@router.put(
+    path="/{customer_id}/profile",
+    status_code=status.HTTP_200_OK,
+    responses=swagger_response(
+        response_model=DataResponse[CustomerRes],
+        success_status_code=status.HTTP_200_OK
+    )
+)
+async def update_profile(customer_id: int, customer: CustomerUpdate):
+    return DataResponse(data=None)
 
+
+@router.get(
+    path="/{customer_id}/profile",
+    status_code=status.HTTP_200_OK,
+    responses=swagger_response(
+        response_model=DataResponse[CustomerRes],
+        success_status_code=status.HTTP_200_OK
+    )
+)
+async def get_profile(customer_id: int = Path(...)):
+    return DataResponse(data=None)

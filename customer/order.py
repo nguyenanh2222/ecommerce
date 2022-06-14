@@ -70,7 +70,7 @@ async def get_orders(
 @router.post(
     path="/",
     status_code=status.HTTP_201_CREATED,
-    description="Chốt đơn",
+    description="Chốt đơn, tạo đơn hàng bao gồm luôn các order_item.",
     responses=swagger_response(
         response_model=DataResponse[OrderRes],
         success_status_code=status.HTTP_201_CREATED

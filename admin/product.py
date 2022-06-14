@@ -1,13 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
-from fastapi import APIRouter, Body, Query, Path
+from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
-from requests import Response
 from sqlalchemy.engine import CursorResult, Row
 from starlette import status
-from datetime import datetime
+
 from database import SessionLocal
 from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
@@ -73,7 +71,6 @@ async def get_products(
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
-
     _rs = "SELECT * FROM ecommerce.products"
     if name or category or product_id or from_price or to_price:
         f'{_rs} WHERE'
@@ -90,6 +87,7 @@ async def get_products(
     session = SessionLocal()
     _result: CursorResult = session.execute(_rs)
     session.commit()
+    #TODO: Page response gắn thêm thuộc tính total_items, total_page, current_page
     return PageResponse(data=_result.fetchall())
 
 
@@ -138,5 +136,4 @@ async def delete_product(id_: int = Query(...)):
     session = SessionLocal()
     _rs: CursorResult = session.execute(f'DELETE FROM products WHERE product_id = {id_}')
     session.commit()
-    return DataResponse(data= None, status_code=status.HTTP_204_NO_CONTENT)
-
+    return DataResponse(data=None, status_code=status.HTTP_204_NO_CONTENT)

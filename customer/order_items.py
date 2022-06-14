@@ -1,16 +1,13 @@
-from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Query, Path, Body
+from fastapi import APIRouter, Query, Body
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult
 from starlette import status
-from starlette.responses import Response
 
 from database import SessionLocal
-from project.core.schemas import PageResponse, Sort, DataResponse
+from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
-from customer.cart import CartItemReq
 
 router = APIRouter()
 
@@ -33,10 +30,12 @@ class OrderItemsRes(BaseModel):
     total_price: Decimal = Field(None)
 
 
+# KHONG CO API NAY XXXXXXXXXXXXXXXXXXX
 @router.post(
     path="/items",
     status_code=status.HTTP_201_CREATED,
     description="New order items",
+    deprecated=True,
     responses=swagger_response(
         response_model=DataResponse[OrderItemsRes],
         success_status_code=status.HTTP_201_CREATED
