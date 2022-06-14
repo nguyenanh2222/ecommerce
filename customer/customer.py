@@ -9,9 +9,6 @@ from project.core.swagger import swagger_response
 
 
 class CustomerReq(BaseModel):
-    customer_id: int = Field(None)
-    payment_method: str = Field(...)
-    password: str = Field(...)
     name: str = Field(...)
     phone: str = Field(...)
     address: str = Field(...)
@@ -20,7 +17,7 @@ class CustomerReq(BaseModel):
 
 
 class CustomerRes(BaseModel):
-    payment_method: str = Field(None)
+    customer_id: int = Field(None)
     password: str = Field(None)
     name: str = Field(None)
     phone: str = Field(None)
@@ -47,16 +44,16 @@ router = APIRouter()
         success_status_code=status.HTTP_201_CREATED
     )
 )
-async def create_customer(customer: CustomerReq = Body(...)):
+async def create_customer(customer: CustomerRes = Body(...)):
     session = SessionLocal()
+    #ma hoa password trước khi nhận
     _rs: CursorResult = session.execute(
-        f"""INSERT INTO customers (payment_method, 
-        password, name, phone, address, email, username) 
-        VALUES ('{customer.payment_method}', '{customer.password}', 
-        '{customer.name}', '{customer.phone}', '{customer.address}',
+        f"""INSERT INTO customers (pa, name, phone, address, email, username) 
+        VALUES ( '{customer.name}', '{customer.phone}', '{customer.address}',
         '{customer.email}' ,'{customer.username}') RETURNING *"""
     )
     _customer_id = _rs.first()[0]
+    print(_customer_id)
     _rs: CursorResult = session.execute(
         f"""INSERT INTO cart (customer_id) VALUES({_customer_id})"""
     )
@@ -73,7 +70,14 @@ async def create_customer(customer: CustomerReq = Body(...)):
     )
 )
 async def update_profile(customer_id: int, customer: CustomerUpdate):
-    return DataResponse(data=None)
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(f"""UPDATE customers
+    SET phone = '{customer.phone}', name = '{customer.name}',
+    address = '{customer.address}', email = '{customer.email}'
+    WHERE customer_id = {customer_id} RETURNING *""")
+    _result = _rs.fetchone()
+    session.commit()
+    return DataResponse(data=_result)
 
 
 @router.get(
@@ -85,4 +89,8 @@ async def update_profile(customer_id: int, customer: CustomerUpdate):
     )
 )
 async def get_profile(customer_id: int = Path(...)):
-    return DataResponse(data=None)
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(f""" SELECT * FROM customers
+    WHERE customer_id = {customer_id} 
+    """)
+    return DataResponse(data=_rs.first())
