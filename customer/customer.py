@@ -52,8 +52,9 @@ async def create_customer(customer: CustomerReq = Body(...)):
     _rs: CursorResult = session.execute(
         f"""INSERT INTO customers (payment_method, 
         password, name, phone, address, email, username) 
-        VALUES ('{customer.payment_method}', '{customer.password}', '{customer.name}',
-        '{customer.phone}', '{customer.address}','{customer.email}' ,'{customer.username}') RETURNING *"""
+        VALUES ('{customer.payment_method}', '{customer.password}', 
+        '{customer.name}', '{customer.phone}', '{customer.address}',
+        '{customer.email}' ,'{customer.username}') RETURNING *"""
     )
     _customer_id = _rs.first()[0]
     _rs: CursorResult = session.execute(
