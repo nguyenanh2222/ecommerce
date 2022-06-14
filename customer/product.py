@@ -10,7 +10,7 @@ from database import SessionLocal
 from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
 from project.core.swagger import swagger_response
-
+za
 
 class ProductReq(BaseModel):
     name: str = Field(...)
