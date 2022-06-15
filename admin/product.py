@@ -4,6 +4,7 @@ from decimal import Decimal
 from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
+from sqlalchemy.orm import Session
 from starlette import status
 import math
 from database import SessionLocal
@@ -71,30 +72,37 @@ async def get_products(
         to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
-    _rs = "SELECT * FROM ecommerce.products WHERE"
-    _category = f" category LIKE '%{category}%'"
-    _name = f" name LIKE '%{name}%'"
-    _product_id = f" product_id = {product_id}"
-    _price = f" price BETWEEN {from_price} AND {to_price}"
-    _sort = f" ORDER BY {sort_direction}"
-    _pagination = " LIMIT {size} OFFSET {(page - 1) * size}"
-    _q = [_category, _name, _product_id, _price]
+    query = "SELECT * FROM ecommerce.products"
+    parameters = [name, category, product_id, from_price, to_price]
+    for parameter in parameters:
+        if parameter is not None:
+            query += " WHERE "
+            break
+    if name is not None:
+        query += f" name LIKE '%{name}%' AND"
+    if category is not None:
+        query += f" category LIKE '%{category}%' AND"
+    if product_id is not None:
+        query += f" product_id = {product_id} AND"
+    if from_price is not None:
+        query += f" price >= {from_price} AND"
+    if to_price is not None:
+        query += f" price <= {to_price} AND"
+    if query.endswith("AND"):
+        query = query[:-3]
+    if sort_direction is not None:
+        query += f""" ORDER BY created_time {sort_direction}"""
 
-    # for index, item in enumerate(_q):
-        # if _q[index].count('None') == 0 and _q[index].count('= None') == 0:
-            # rs +=?'AND'
-
-
-
-
-    session = SessionLocal()
-    _r: CursorResult = session.execute(_rs)
-    result = _r.fetchall()
-    total_items = len(result)
+    session: Session = SessionLocal()
+    _t: CursorResult = session.execute(query)
+    total = _t.fetchall()
+    total_page = math.ceil(len(total) / size)
+    total_items = len(total)
+    query += f" LIMIT {size} OFFSET {(page - 1) * size}"
+    _rs: CursorResult = session.execute(query)
+    _result = _rs.fetchall()
     current_page = page
-    _r: CursorResult = session.execute("SELECT product_id FROM ecommerce.products")
-    total_page = math.ceil(len(_r.fetchall())/size)
-    return PageResponse(data=result,
+    return PageResponse(data=_result,
                         total_page=total_page,
                         total_items=total_items,
                         current_page=current_page)
