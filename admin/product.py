@@ -72,12 +72,18 @@ async def get_products(
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
 ):
     _rs = "SELECT * FROM ecommerce.products WHERE"
-    f" category LIKE '%{category}%'"
-    f" name LIKE '%{name}%'"
-    f" product_id = {product_id}"
-    f" price BETWEEN {from_price} AND {to_price}"
-    f" ORDER BY {sort_direction}"
-    f" LIMIT {size} OFFSET {(page - 1) * size}"
+    _category = f" category LIKE '%{category}%'"
+    _name = f" name LIKE '%{name}%'"
+    _product_id = f" product_id = {product_id}"
+    _price = f" price BETWEEN {from_price} AND {to_price}"
+    _sort = f" ORDER BY {sort_direction}"
+    _pagination = " LIMIT {size} OFFSET {(page - 1) * size}"
+    _q = [_category, _name, _product_id, _price]
+
+    # for index, item in enumerate(_q):
+        # if _q[index].count('None') == 0 and _q[index].count('= None') == 0:
+            # rs +=?'AND'
+
 
 
 
