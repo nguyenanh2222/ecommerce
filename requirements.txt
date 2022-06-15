@@ -49,3 +49,4 @@ pytest
 pytest-dotenv
 
 starlette~=0.18.0
+psycopg2-binary==2.9.3

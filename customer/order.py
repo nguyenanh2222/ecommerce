@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult
 from starlette import status
 
+
 from database import SessionLocal
 from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
@@ -89,5 +90,6 @@ async def place_order(
         '{order_status.EOrderStatus.OPEN_ORDER}', 
         '{order.time_open}') RETURNING *"""
     )
+    
     session.commit()
     return PageResponse(data=_rs.fetchall())
