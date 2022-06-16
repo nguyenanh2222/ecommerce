@@ -105,22 +105,16 @@ async def place_order(
     WHERE c.customer_id = {customer_id}"""
     _rs: CursorResult = session.execute(query)
     result = _rs.fetchall()
-    print(result)
     query = f""" INSERT INTO order_items
     (product_id, product_name, quantity, 
     price, total_price, order_id) VALUES """
+
     for item in result:
         query += f"""({item[0]}, '{item[1]}',
         {item[2]}, {item[3]}, {item[4]}, {item[5]}) ,"""
-    query += f"{query[:-1]} RETURNING *"
+        print(query)
+    query = f"{query[:-1]} RETURNING *"
     _rs: CursorResult = session.execute(query)
-
-
-
-    # delete item in cart_items
-    f""" DELETE FROM cart_item 
-    WHERE customer_id = {customer_id}
-    """
 
     # calculate order.total_amount
     query = f"""SELECT SUM(total_price) FROM order_items oi
@@ -139,6 +133,18 @@ async def place_order(
         '{order.time_open}') RETURNING *"""
     )
     result = _rs.fetchall()
+
+    # delete item in cart_items
+    query = f"""SELECT cart_id FROM cart 
+    WHERE customer_id = {customer_id}"""
+    _rs: CursorResult = session.execute(query)
+    cart_id = _rs.first()[0]
+    query = f""" DELETE FROM cart_items
+    WHERE cart_id = {cart_id} """
+    _rs: CursorResult = session.execute(query)
+
+
+
 
     # subtraction product quantity
     query = f"""SELECT ci.product_id, SUM(ci.quantity)
@@ -166,9 +172,12 @@ async def place_order(
         for item_p in quans_product:
             if item_p[0] == item_c[0]:
                 sub_product = item_p[1] - item_c[1]
+                print(sub_product)
                 query = f""" UPDATE products
                 SET  quantity = {sub_product},
                 WHERE product_id = {item_p[0]}"""
                 _rs: CursorResult = session.execute(query)
     session.commit()
     return PageResponse(data=result)
+
+# comfirted, complicate, cancelled
