@@ -1,3 +1,4 @@
+import math
 from datetime import datetime
 from decimal import Decimal
 
@@ -8,7 +9,7 @@ from starlette import status
 
 from database import SessionLocal
 from order_status import EOrderStatus
-from project.core.schemas import PageResponse, Sort
+from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
 
 
@@ -46,22 +47,38 @@ async def get_orders(
         customer_name: str = Query(None, description="Tên khách hàng"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc")
 ):
-    session = SessionLocal()
-    _rs = f"""SELECT * FROM ecommerce.orders o
+
+    query = f"""SELECT * FROM ecommerce.orders o
     JOIN ecommerce.order_items oi ON o.order_id = oi.order_id """
-    if page or size is not None:
-        _rs += f"LIMIT {size} OFFSET {(page-1)*size}"
-    if product_name or customer_name or order_id:
-        _rs += "WHERE"
-    if product_name is not None:
-        _rs += f" product_name LIKE '%{product_name}% ORDER BY {sort_direction}'"
-    if customer_name is not None:
-        _rs += f" customer_name LIKE '%{customer_name}%' ORDER BY {sort_direction}"
+    parameters = [order_id, product_name, customer_name]
+    for parameter in parameters:
+        if parameter is not None:
+            query += " WHERE "
+            break
     if order_id is not None:
-        _rs += f" order_id = {order_id} ORDER BY {sort_direction}"
-    _result: CursorResult = session.execute(_rs)
+        query += f"order_id = {order_id} AND"
+    if customer_name is not None:
+        query += f" customer_name LIKE '%{customer_name}%' AND"
+    if product_name is not None:
+        query += f" product_name LIKE '%{product_name}%' AND"
+    if query.endswith("AND"):
+        query = query[:-3]
+    if sort_direction is not None:
+        query += f"ORDER BY time_hire {sort_direction}"
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(query)
+    total = _rs.fetchall()
+    total_page = math.ceil(len(total) / size)
+    total_items = len(total)
+    query += f" LIMIT {size} OFFSET {(page - 1) * size}"
+    _rs: CursorResult = session.execute(query)
+    _result = _rs.fetchall()
+    current_page = page
     session.commit()
-    return PageResponse(data=_result.fetchall())
+    return PageResponse(data=_result,
+                        total_page=total_page,
+                        total_items=total_items,
+                        current_page=current_page)
 
 
 @router.put(
@@ -77,7 +94,9 @@ async def change_order_status(
     _rs: CursorResult = session.execute(
         f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
     )
+    result = _rs.fetchone()
+    print(result)
     session.commit()
-    return PageResponse(data=_rs.fetchall())
+    return DataResponse(data=result)
 
 

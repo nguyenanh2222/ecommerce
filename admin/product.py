@@ -93,9 +93,9 @@ async def get_products(
     if sort_direction is not None:
         query += f""" ORDER BY created_time {sort_direction}"""
 
-    session: Session = SessionLocal()
-    _t: CursorResult = session.execute(query)
-    total = _t.fetchall()
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(query)
+    total = _rs.fetchall()
     total_page = math.ceil(len(total) / size)
     total_items = len(total)
     query += f" LIMIT {size} OFFSET {(page - 1) * size}"
