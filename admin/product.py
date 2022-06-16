@@ -4,7 +4,7 @@ from decimal import Decimal
 from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
-from sqlalchemy.orm import Session
+
 from starlette import status
 import math
 from database import SessionLocal
@@ -93,9 +93,9 @@ async def get_products(
     if sort_direction is not None:
         query += f""" ORDER BY created_time {sort_direction}"""
 
-    session: Session = SessionLocal()
-    _t: CursorResult = session.execute(query)
-    total = _t.fetchall()
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(query)
+    total = _rs.fetchall()
     total_page = math.ceil(len(total) / size)
     total_items = len(total)
     query += f" LIMIT {size} OFFSET {(page - 1) * size}"

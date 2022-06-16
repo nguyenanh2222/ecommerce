@@ -8,6 +8,8 @@ from starlette import status
 from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 from database import SessionLocal
+from customer.product import ProductReq
+
 
 
 class CartReq(BaseModel):
@@ -53,7 +55,8 @@ async def get_cart(customer_id: int = Query(...)):
     JOIN cart_items ci  
     ON ca.cart_id = ci.cart_id 
     WHERE ca.customer_id = {customer_id}""")
-    return DataResponse(data=_rs.fetchall())
+    result = _rs.fetchone()
+    return DataResponse(data=result)
 
 
 @router.put(
@@ -69,6 +72,7 @@ async def add_item_to_cart(
         item: CartItemReq = Body(...)
 ):
     session = SessionLocal()
+
     _rs: CursorResult = session.execute(f"""SELECT * FROM ecommerce.customers c
     JOIN ecommerce.cart ca ON c.customer_id = ca.customer_id 
     WHERE ca.customer_id = {customer_id}""")
@@ -84,8 +88,9 @@ async def add_item_to_cart(
         VALUES ('{item.product_name}', {_cart_id}, 
         {item.quantity}, {item.quantity * item.price},
         {item.price}, {item.product_id}) RETURNING *""")
+    result = _item.fetchone()
     session.commit()
-    return DataResponse(data=_item.fetchone())
+    return DataResponse(data=result)
 
 
 class CartItemReq:

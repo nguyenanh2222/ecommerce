@@ -38,18 +38,19 @@ router = APIRouter()
 
 @router.post(
     path="/",
+
     status_code=status.HTTP_201_CREATED,
     responses=swagger_response(
         response_model=DataResponse[CustomerRes],
-        success_status_code=status.HTTP_201_CREATED
+        success_status_code=status.HTTP_201_CREATED,
     )
 )
 async def create_customer(customer: CustomerRes = Body(...)):
     session = SessionLocal()
     #ma hoa password trước khi nhận
     _rs: CursorResult = session.execute(
-        f"""INSERT INTO customers (pa, name, phone, address, email, username) 
-        VALUES ( '{customer.name}', '{customer.phone}', '{customer.address}',
+        f"""INSERT INTO customers (password, name, phone, address, email, username) 
+        VALUES ( '{customer.password}','{customer.name}', '{customer.phone}', '{customer.address}',
         '{customer.email}' ,'{customer.username}') RETURNING *"""
     )
     _customer_id = _rs.first()[0]

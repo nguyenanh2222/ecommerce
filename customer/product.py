@@ -2,15 +2,15 @@ import math
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy.engine import CursorResult, Row
 from starlette import status
 
 from database import SessionLocal
-from project.core.schemas import DataResponse, PageResponse
-from project.core.schemas import Sort
+from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
+
 
 class ProductReq(BaseModel):
     name: str = Field(...)
@@ -19,6 +19,9 @@ class ProductReq(BaseModel):
     description: str = Field(...)
     category: str = Field(...)
     created_time: datetime = Field(...)
+
+
+router = APIRouter()
 
 
 class ProductRes(BaseModel):
@@ -31,50 +34,11 @@ class ProductRes(BaseModel):
     created_time: datetime = Field(None)
 
 
-router = APIRouter()
-
-
-async def get_products(
-        page: int = Query(1, description="Trang"),
-        size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
-        name: str = Query(None, description="Tên sản phẩm"),
-        category: str = Query(None, description="Loại ngành hàng"),
-        product_id: int = Query(None, description="Mã sản phẩm"),
-        from_price: Decimal = Query(None, description="Khoảng giá giới hạn dưới"),
-        to_price: Decimal = Query(None, description="Khoảng giá giới hạn trên"),
-        sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo sản phẩm asc|desc")
-):
-    _rs = "SELECT * FROM ecommerce.products"
-    if name or category or product_id or from_price or to_price:
-        _rs +=f'{_rs} WHERE'
-        if name is not None:
-            _rs += f" name LIKE '%{name}%' ORDER BY {sort_direction}"
-            print(_rs)
-        if product_id is not None:
-            _rs += f" product_id = {product_id} ORDER BY {sort_direction}"
-        if from_price and to_price is not None:
-            _rs += f"price BETWEEN {from_price} AND {to_price} ORDER BY {sort_direction}"
-    if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page - 1) * size}"
-    session = SessionLocal()
-    _r: CursorResult = session.execute(_rs)
-    result = _r.fetchall()
-    total_items = len(result)
-    current_page = page
-    _r: CursorResult = session.execute("SELECT product_id FROM ecommerce.products")
-    total_page = math.ceil(len(_r.fetchall())/size)
-    return PageResponse(data=result,
-                        total_page=total_page,
-                        total_items=total_items,
-                        current_page=current_page)
-
-
-
 @router.get(
-    path="/{id}",
+    path="/",
     status_code=status.HTTP_200_OK,
     responses=swagger_response(
-        response_model=DataResponse[ProductRes],
+        response_model=DataResponse[ProductReq],
         success_status_code=status.HTTP_200_OK
     )
 )
@@ -82,7 +46,6 @@ async def get_product(id: int):
     session = SessionLocal()
     _rs: CursorResult = session.execute(f'SELECT * FROM products WHERE product_id = {id}')
     product: Row = _rs.first()
-    print(type(product), dict(product))
     return DataResponse(data=product)
 
 

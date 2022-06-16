@@ -6,7 +6,9 @@ from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from admin.order import router as order_router
-from admin.product import router as product_router
+from admin.product import router as product_admin_router
+
+from customer.product import router as product_customer_router
 from customer.cart import router as cart_router
 from customer.order import router as customer_order_router
 from customer.order_items import router as customer_order_items_router
@@ -35,9 +37,10 @@ class Tags(str, Enum):
 
 
 router = APIRouter(prefix="/api/v1")
-router.include_router(router=product_router, prefix="/products", tags=[Tags.admin])
+router.include_router(router=product_admin_router, prefix="/products", tags=[Tags.admin])
 router.include_router(router=order_router, prefix="/orders", tags=[Tags.admin])
 
+router.include_router(router=product_customer_router, prefix="/customer/products", tags=[Tags.customer])
 router.include_router(router=customer_order_router, prefix="/customers/orders", tags=[Tags.customer])
 router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
 router.include_router(router=customer_order_items_router, prefix="/customers/orders", tags=[Tags.customer])
