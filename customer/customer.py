@@ -45,7 +45,7 @@ router = APIRouter()
         success_status_code=status.HTTP_201_CREATED,
     )
 )
-async def create_customer(customer: CustomerRes = Body(...)):
+async def create_customer(customer: CustomerReq = Body(...)):
     session = SessionLocal()
     #ma hoa password trước khi nhận
     _rs: CursorResult = session.execute(

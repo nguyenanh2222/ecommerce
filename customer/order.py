@@ -78,6 +78,7 @@ async def get_orders(
     responses=swagger_response(
         response_model=DataResponse[OrderRes],
         success_status_code=status.HTTP_201_CREATED
+
     )
 )
 async def place_order(
@@ -85,46 +86,43 @@ async def place_order(
         order: OrderReq = Body(...)
 ):
 
-    global sub_product
+
     session = SessionLocal()
 
     # insert into orders
-    query = f""" INSERT INTO orders (customer_id)
-    VALUES ({customer_id})"""
+    query = f""" INSERT INTO ecommerce.orders (customer_id)
+    VALUES ({customer_id}) RETURNING *"""
     _rs: CursorResult = session.execute(query)
-
+    order_id = _rs.fetchone()[0]
 
     # insert items into order_items
     query = f"""SELECT product_id, product_name,
-    quantity, price, total_price, order_id
+    quantity, price, total_price
     FROM cart c
     JOIN cart_items ci
     ON c.cart_id = ci.cart_id
     JOIN orders o
     ON c.customer_id = o.customer_id
-    WHERE c.customer_id = {customer_id}"""
+    WHERE c.customer_id = {customer_id} 
+    AND order_id = {order_id}"""
     _rs: CursorResult = session.execute(query)
     result = _rs.fetchall()
     query = f""" INSERT INTO order_items
     (product_id, product_name, quantity, 
     price, total_price, order_id) VALUES """
-
     for item in result:
         query += f"""({item[0]}, '{item[1]}',
-        {item[2]}, {item[3]}, {item[4]}, {item[5]}) ,"""
-        print(query)
+        {item[2]}, {item[3]}, {item[4]}, {order_id}) ,"""
     query = f"{query[:-1]} RETURNING *"
     _rs: CursorResult = session.execute(query)
 
-    # calculate order.total_amount
-    query = f"""SELECT SUM(total_price) FROM order_items oi
-    JOIN orders o
-    ON oi.order_id = o.order_id
-    WHERE customer_id = {customer_id}
-    """
+    query = f"""SELECT SUM(total_price) 
+    FROM cart_items ci 
+    JOIN cart c
+    ON ci.cart_id = c.cart_id
+    WHERE customer_id = {customer_id}"""
     _rs: CursorResult = session.execute(query)
-    total_amount = _rs.fetchone()[0]
-    order.total_amount = total_amount
+    order.total_amount = _rs.first()[0]
     _rs: CursorResult = session.execute(
         f""" INSERT INTO ecommerce.orders
         (customer_id ,total_amount, status, time_open)
@@ -133,18 +131,6 @@ async def place_order(
         '{order.time_open}') RETURNING *"""
     )
     result = _rs.fetchall()
-
-    # delete item in cart_items
-    query = f"""SELECT cart_id FROM cart 
-    WHERE customer_id = {customer_id}"""
-    _rs: CursorResult = session.execute(query)
-    cart_id = _rs.first()[0]
-    query = f""" DELETE FROM cart_items
-    WHERE cart_id = {cart_id} """
-    _rs: CursorResult = session.execute(query)
-
-
-
 
     # subtraction product quantity
     query = f"""SELECT ci.product_id, SUM(ci.quantity)
@@ -158,26 +144,34 @@ async def place_order(
     quans_cart = _rs.fetchall()
     for item in quans_cart:
         query = f""" SELECT p.product_id, p.quantity
-        FROM products
-        JOIN order_items oi
-        ON oi.product_id = p.product_id
+        FROM ecommerce.products p 
+        JOIN ecommerce.order_items oi2
+        ON oi2.product_id = p.product_id
         WHERE p.product_id = {item[0]}
     """
         _rs: CursorResult = session.execute(query)
     quans_product = _rs.fetchall()
-    print(quans_product)
 
     # update product
     for item_c in quans_cart:
         for item_p in quans_product:
             if item_p[0] == item_c[0]:
                 sub_product = item_p[1] - item_c[1]
-                print(sub_product)
+                if sub_product < 0:
+                    return DataResponse(data="SOLD OUT!")
                 query = f""" UPDATE products
-                SET  quantity = {sub_product},
+                SET  quantity = {sub_product}
                 WHERE product_id = {item_p[0]}"""
                 _rs: CursorResult = session.execute(query)
-    session.commit()
-    return PageResponse(data=result)
 
-# comfirted, complicate, cancelled
+
+    # delete item in cart_items
+    query = f""" DELETE 
+    FROM ecommerce.cart_items ci
+    USING ecommerce.orders o
+    WHERE customer_id = {customer_id} 
+    """
+    _rs: CursorResult = session.execute(query)
+    session.commit()
+
+    return DataResponse(data=result)
