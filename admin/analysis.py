@@ -1,65 +1,44 @@
-from decimal import Decimal
 
-from fastapi import APIRouter, Query
-from pydantic import BaseModel, Field
-from sqlalchemy.engine import CursorResult
+from fastapi import APIRouter, Query, Body
 from starlette import status
 
-
 from database import SessionLocal
-from project.core.schemas import PageResponse, Sort
+from project.core.schemas import PageResponse, Sort, DataResponse
 from project.core.swagger import swagger_response
-from datetime import datetime
-
-
-class OrderReq(BaseModel):
-    total_amount: Decimal = Field(...)
-    total_order: int = Field(...)
-    product_price: Decimal = Field(...)
-    time_hire: datetime = Field(...)
-
-
-class OrderRes(BaseModel):
-    order_id: int = Field(None)
-    total_amount: Decimal = Field(None)
-    product_quantity: int = Field(None)
-    unit_price: int = Field(None)
-    customer_id: int = Field(None)
-
+from datetime import datetime, timezone
+from customer.order import OrderRes
 
 router = APIRouter()
 
 
+class CusorResult:
+    pass
+
+
 @router.get(
-    path="/",
+    path="/analysis",
     status_code=status.HTTP_200_OK,
+    description= "tính doanh thu theo một khoảng thời gian",
     responses=swagger_response(
         response_model=PageResponse[OrderRes],
         success_status_code=status.HTTP_200_OK
     )
 )
 
-async def get_orders(
-        page: int = Query(1, description="Trang"),
-        size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
-        order_id: int = Query(None, description="Mã đơn hàng"),
-        product_name: str = Query(None, description="Tên sản phẩm có trong đơn hàng"),
-        customer_name: str = Query(None, description="Tên khách hàng"),
-        sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc")
+async def analysis_revenue_in_period(
+        start_datetime: datetime = Query(datetime.strptime("2021-11-29", "%Y-%m-%d")),
+        end_datetime: datetime = Query(datetime.strptime("2021-11-29", "%Y-%m-%d"))
 ):
 
     session = SessionLocal()
-    _rs = "SELECT * FROM ecommerce.products"
-    if order_id or product_name or customer_name:
-        _rs += "WHERE"
-    if product_name is not None:
-        _rs += f" product_name LIKE '%{product_name}%' ORDER BY {sort_direction}"
-    if customer_name is not None:
-        _rs += f" product_id = {customer_name} ORDER BY {sort_direction}"
-    if page and size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
-    _result: CursorResult = session.execute(_rs)
-    session.commit()
-    return PageResponse(data=_result.fetchall())
-# ...................................
-# Thong ke theo ngay thang chua lam xong
+    # Sum total_amount in period time
+    query = f"""SELECT SUM(total_amount), AVG(total_amount) 
+    FROM ecommerce.orders 
+    WHERE time_open >= '{start_datetime}' 
+    AND time_open <= '{end_datetime}'"""
+    _rs: CusorResult = session.execute(query)
+    revenue = _rs.fetchone()
+    return DataResponse(data= revenue)
+
+
+

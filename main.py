@@ -7,6 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from admin.order import router as order_router
 from admin.product import router as product_admin_router
+from admin.analysis import router as analysis_admin_router
 
 from customer.product import router as product_customer_router
 from customer.cart import router as cart_router
@@ -45,7 +46,7 @@ router.include_router(router=customer_order_router, prefix="/customers/orders", 
 router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
 router.include_router(router=customer_order_items_router, prefix="/customers/orders", tags=[Tags.customer])
 router.include_router(router=customers_router, prefix="/customers", tags=[Tags.customer])
-
+router.include_router(router=analysis_admin_router, prefix="/admin/analysis", tags=[Tags.admin])
 
 app.include_router(router)
 if __name__ == "__main__":
