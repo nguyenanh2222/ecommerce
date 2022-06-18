@@ -8,8 +8,6 @@ from starlette import status
 from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 from database import SessionLocal
-from customer.product import ProductReq
-
 
 
 class CartReq(BaseModel):
@@ -20,7 +18,6 @@ class CartRes(BaseModel):
     items: List[CartReq] = Field([])
     product_id: int = Field(None)
     customer_id: int = Field(None)
-
 
 
 class CartItemReq(BaseModel):

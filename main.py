@@ -14,6 +14,10 @@ from customer.cart import router as cart_router
 from customer.order import router as customer_order_router
 from customer.order_items import router as customer_order_items_router
 from customer.customer import router as customers_router
+
+
+from orm.customer.customer import router as orm_customer_router
+# from orm.customer import router as orm_customer_product_router
 app = FastAPI(
     title="ecommerce",
     description="ecommerce description",
@@ -35,6 +39,8 @@ app.add_middleware(
 class Tags(str, Enum):
     customer = "[Customer]"
     admin = "[Admin]"
+    customer_orm = "[Customer][ORM]"
+    admin_orm = "[Admin][ORM]"
 
 
 router = APIRouter(prefix="/api/v1")
@@ -48,6 +54,13 @@ router.include_router(router=customer_order_items_router, prefix="/customers/ord
 router.include_router(router=customers_router, prefix="/customers", tags=[Tags.customer])
 router.include_router(router=analysis_admin_router, prefix="/admin/analysis", tags=[Tags.admin])
 
+router_orm = APIRouter(prefix="/api/v2")
+router_orm.include_router(router=orm_customer_router.router, prefix="/customer",
+                          tags=[Tags.customer_orm])
+# router_orm.include_router(router=orm_customer_product_router.router, prefix="/customer/product",
+#                           tags=[Tags.customer_orm])
+
 app.include_router(router)
+app.include_router(router_orm)
 if __name__ == "__main__":
     uvicorn.run('main:app', host="127.0.0.1", port=8001, reload=True, env_file=".env")
