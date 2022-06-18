@@ -16,7 +16,7 @@ from customer.order_items import router as customer_order_items_router
 from customer.customer import router as customers_router
 
 
-from orm.customer.customer import router as orm_customer_router
+from orm.customer import customer as orm_customer_router
 # from orm.customer import router as orm_customer_product_router
 app = FastAPI(
     title="ecommerce",
