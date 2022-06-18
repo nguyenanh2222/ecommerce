@@ -16,8 +16,9 @@ from customer.order_items import router as customer_order_items_router
 from customer.customer import router as customers_router
 
 
-from orm.customer.customer import router as orm_customer_router
-# from orm.customer import router as orm_customer_product_router
+from orm.customer import product as orm_product_router
+from orm.customer import customer as orm_customer_router
+from orm.customer import order as orm_order_router
 app = FastAPI(
     title="ecommerce",
     description="ecommerce description",
@@ -57,9 +58,10 @@ router.include_router(router=analysis_admin_router, prefix="/admin/analysis", ta
 router_orm = APIRouter(prefix="/api/v2")
 router_orm.include_router(router=orm_customer_router.router, prefix="/customer",
                           tags=[Tags.customer_orm])
-# router_orm.include_router(router=orm_customer_product_router.router, prefix="/customer/product",
-#                           tags=[Tags.customer_orm])
-
+router_orm.include_router(router=orm_product_router.router, prefix="/customer/products",
+                          tags=[Tags.customer_orm])
+router_orm.include_router(router=orm_order_router.router, prefix="/customer/order",
+                          tags=[Tags.customer_orm])
 app.include_router(router)
 app.include_router(router_orm)
 if __name__ == "__main__":

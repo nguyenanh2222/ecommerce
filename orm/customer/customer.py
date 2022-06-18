@@ -19,7 +19,7 @@ class CustomerReq(BaseModel):
 
 
 @router.get(
-    path="/all",
+    path="/all/customers",
     deprecated=True
 )
 async def get_customers():
@@ -37,7 +37,7 @@ async def get_customer(id: int):
 
 
 @router.put(
-    path="/{id}/update",
+    path="/{id}",
 )
 async def update_profile(customer_id: int,
                          customer: CustomerReq):
@@ -53,7 +53,7 @@ async def update_profile(customer_id: int,
 
 
 @router.post(
-    path="/{id}/insert"
+    path="/{id}"
 )
 async def create_profile(
         customer: CustomerReq

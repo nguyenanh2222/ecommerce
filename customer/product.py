@@ -12,6 +12,8 @@ from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 
 
+
+
 class ProductReq(BaseModel):
     name: str = Field(...)
     quantity: int = Field(...)
@@ -19,8 +21,6 @@ class ProductReq(BaseModel):
     description: str = Field(...)
     category: str = Field(...)
     created_time: datetime = Field(...)
-
-
 router = APIRouter()
 
 
