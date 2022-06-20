@@ -17,7 +17,7 @@ from customer.customer import router as customers_router
 
 
 from orm.customer.customer import router as orm_customer_router
-# from orm.customer import router as orm_customer_product_router
+from orm.customer.order import router as orm_customer_order_router
 app = FastAPI(
     title="ecommerce",
     description="ecommerce description",
@@ -55,10 +55,10 @@ router.include_router(router=customers_router, prefix="/customers", tags=[Tags.c
 router.include_router(router=analysis_admin_router, prefix="/admin/analysis", tags=[Tags.admin])
 
 router_orm = APIRouter(prefix="/api/v2")
-router_orm.include_router(router=orm_customer_router.router, prefix="/customer",
+router_orm.include_router(router=orm_customer_router, prefix="/customer",
                           tags=[Tags.customer_orm])
-# router_orm.include_router(router=orm_customer_product_router.router, prefix="/customer/product",
-#                           tags=[Tags.customer_orm])
+router_orm.include_router(router=orm_customer_order_router, prefix="/customer/order",
+                          tags=[Tags.customer_orm])
 
 app.include_router(router)
 app.include_router(router_orm)

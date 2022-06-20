@@ -1,3 +1,4 @@
+import math
 from decimal import Decimal
 
 from fastapi import APIRouter, Query, Body, HTTPException
@@ -51,24 +52,37 @@ async def get_orders(
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc"),
 ):
     session = SessionLocal()
-    _rs= f"""SELECT * FROM ecommerce.orders o
-        JOIN ecommerce.order_items oi 
-        ON o.order_id = oi.order_id """
-    if product_name or customer_id or order_id:
-        _rs += "WHERE"
-    if product_name is not None:
-        _rs += f" product_name LIKE '%{product_name}%' OR"
-    if customer_id is not None:
-        _rs += f" customer_id = {customer_id} "
+    query = f"""SELECT * FROM ecommerce.orders o
+        JOIN ecommerce.order_items oi ON o.order_id = oi.order_id """
+    parameters = [order_id, product_name, customer_id]
+    for parameter in parameters:
+        if parameter is not None:
+            query += " WHERE "
+            break
     if order_id is not None:
-        _rs += f" order_id = {order_id} "
+        query += f"order_id = {order_id} AND"
+    if customer_id is not None:
+        query += f" customer_id = {customer_id} AND"
+    if product_name is not None:
+        query += f" product_name LIKE '%{product_name}%' AND"
+    if query.endswith("AND"):
+        query = query[:-3]
     if sort_direction is not None:
-        _rs += f"ORDER BY time_hire "
-    if page or size is not None:
-        _rs += f" LIMIT {size} OFFSET {(page - 1) * size} "
-    _result: CursorResult = session.execute(_rs)
+        query += f"ORDER BY time_open {sort_direction}"
+    session = SessionLocal()
+    _rs: CursorResult = session.execute(query)
+    total = _rs.fetchall()
+    total_page = math.ceil(len(total) / size)
+    total_items = len(total)
+    query += f" LIMIT {size} OFFSET {(page - 1) * size}"
+    _rs: CursorResult = session.execute(query)
+    _result = _rs.fetchall()
+    current_page = page
     session.commit()
-    return PageResponse(data=_result.fetchall())
+    return PageResponse(data=_result,
+                        total_page=total_page,
+                        total_items=total_items,
+                        current_page=current_page)
 
 
 @router.post(
@@ -85,8 +99,6 @@ async def place_order(
         customer_id: int = Query(...),
         order: OrderReq = Body(...)
 ):
-
-
     session = SessionLocal()
 
     # insert into orders
