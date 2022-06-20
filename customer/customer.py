@@ -14,7 +14,7 @@ class CustomerReq(BaseModel):
     address: str = Field(...)
     email: str = Field(...)
     username: str = Field(...)
-
+    password: str = Field(...)
 
 class CustomerRes(BaseModel):
     customer_id: int = Field(None)

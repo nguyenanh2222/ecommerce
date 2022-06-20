@@ -1,7 +1,6 @@
-
-
 from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, DATE
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
+
 Base = declarative_base()
 
 
@@ -18,20 +17,8 @@ class Customer(Base):
     email = Column(String)
     username = Column(String)
 
-    class Config:
-        arbitrary_types_allowed = True
-
-    # def __repr__(self):
-    #     return """<Customer(password='%s',
-    #     name='%s', phone='%s',
-    #     address='%s',
-    #     email='%s', username='%s')>""" % (
-    #         self.name, self.sex, self.clas,
-    #         self.grade, self.email, self.username)
-
 
 class Products(Base):
-
     __tablename__ = "products"
 
     product_id = Column(Integer,
@@ -45,63 +32,67 @@ class Products(Base):
     created_time = Column(DATE)
 
 
-# class Cart:
-#     __tablename__ = "cart"
-#
-#     customer_id = Column(Integer, primary_key=True)
-#     cart_id = Column(Integer,
-#                      ForeignKey("Customers.customer_id"),
-#                      nullable=False)
-#
-#
-# class CartItems:
-#     __tablename__ = "cart_items"
-#
-#     cart_id = Column(Integer,
-#                          ForeignKey("Cart.cart_id"),
-#                          nullable=False)
-#     product_name = Column(String)
-#     cart_items_id = Column(Integer,
-#                            primary_key=True,
-#                            nullable=False)
-#     product_id = Column(Integer,
-#                         ForeignKey("Product.product_id"),
-#                         nullable=False)
-#     total_amount = Column(DECIMAL)
-#     quantity = Column(Integer)
-#     price = Column(DECIMAL)
-#
-#
-class Orders:
+class Cart(Base):
+    __tablename__ = "cart"
+
+    customer_id = Column(Integer,
+                         ForeignKey("customers.customer_id"),
+                         nullable=False)
+    cart_id = Column(Integer,
+                     primary_key=True,
+                     nullable=False)
+
+    cart_items = relationship("CartItems")
+
+
+class CartItems(Base):
+    __tablename__ = "cart_items"
+
+    cart_id = Column(Integer,
+                     ForeignKey("cart.cart_id"),
+                     nullable=False)
+    product_name = Column(String)
+    cart_items_id = Column(Integer,
+                           primary_key=True,
+                           nullable=False)
+    product_id = Column(Integer,
+                        ForeignKey("products.product_id"),
+                        nullable=False)
+    total_price = Column(DECIMAL)
+    quantity = Column(Integer)
+    price = Column(DECIMAL)
+
+
+
+
+class Orders(Base):
     __tablename__ = "orders"
 
     order_id = Column(Integer,
                       primary_key=True,
                       nullable=False)
     customer_id = Column(Integer,
-                         ForeignKey("Customers.customer_id"),
+                         ForeignKey("customers.customer_id"),
                          nullable=False)
     total_amount = Column(DECIMAL)
     status = Column(String)
     time_open = Column(DATE)
 
+    order_items = relationship("OrderItems")
 
-class OrderItems:
 
+class OrderItems(Base):
     __tablename__ = "order_items"
     product_id = Column(Integer,
-                        primary_key=True,
-                        nullable=False)
+                        ForeignKey("products.product_id"),
+                        nullable=True)
     product_name = Column(String)
     quantity = Column(Integer)
     price = Column(DECIMAL)
-    total_amount = Column(DECIMAL)
+    total_price = Column(DECIMAL)
     order_id = Column(Integer,
-                      ForeignKey("Order.order_id"),
+                      ForeignKey("orders.order_id"),
                       nullable=True)
     order_items_id = Column(Integer,
                             primary_key=True,
                             nullable=False)
-#
-
-
