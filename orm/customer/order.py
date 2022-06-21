@@ -6,7 +6,7 @@ from operator import or_
 
 from fastapi import APIRouter, Query, Body
 from pydantic import BaseModel, Field
-from sqlalchemy import asc, insert, func, select
+from sqlalchemy import asc, insert, func, select, delete
 from sqlalchemy.orm import Session, selectinload
 from starlette import status
 
@@ -95,10 +95,10 @@ async def place_order(
     # insert into OrderItems
     session: Session = SessionLocal()
     stmt = insert(Orders).values(
-            customer_id=f"{customer_id}",
-            total_amount=f"{order.total_amount}",
-            status=f"{order.status}",
-            time_open=f"{order.time_open}").returning(
+        customer_id=f"{customer_id}",
+        total_amount=f"{order.total_amount}",
+        status=f"{order.status}",
+        time_open=f"{order.time_open}").returning(
         Orders.order_id
     )
 
@@ -113,40 +113,52 @@ async def place_order(
         CartItems.total_price,
         CartItems.quantity,
         CartItems.price
-    ).join(Cart, Orders.customer_id==Cart.customer_id).join(
+    ).join(Cart, Orders.customer_id == Cart.customer_id).join(
         CartItems, CartItems.cart_id == Cart.cart_id).where(
         Orders.customer_id == customer_id
     ).all()
 
     for item in query:
         session.add(OrderItems(
-                order_id=item[0],
-                product_id=item[1],
-                product_name=item[2],
-                total_price=item[4] * item[5],
-                quantity=item[4],
-                price=item[5]
-            ))
+            order_id=item[0],
+            product_id=item[1],
+            product_name=item[2],
+            total_price=item[4] * item[5],
+            quantity=item[4],
+            price=item[5]
+        ))
         session.execute(stmt)
         session.commit()
 
+    #update column quantity on products table
     query = session.query(
-        Products.product_id, func.sum(Products.quantity)
-    ).join(OrderItems,
-           OrderItems.product_id == Products.product_id).join(
-        Orders, Orders.order_id == OrderItems.order_id).filter(
-        Orders.customer_id == customer_id).group_by(
-        Products.product_id)
-    p_in_order = query.all()
-    print(p_in_order)
+        Products.product_id, Products.quantity
+    ).join(
+        OrderItems, OrderItems.product_id == Products.product_id
+    ).join(
+        Orders, Orders.order_id == OrderItems.order_id
+    ).filter(Orders.customer_id == customer_id)
+    from_product = query.all()
     query = session.query(
-        OrderItems.product_id, func.sum(OrderItems.quantity)
-    ).join(OrderItems,
-           OrderItems.product_id == Products.product_id).join(
-        Orders, Orders.order_id == OrderItems.order_id).filter(
-        Orders.customer_id == customer_id).group_by(
-        Products.product_id)
-    query.all()
-    p_in_product = query.all()
-    print(p_in_product)
-    # subtract product
+        OrderItems.order_id, OrderItems.quantity
+    ).join(
+        Orders, Orders.order_id == OrderItems.order_id
+    ).filter(Orders.customer_id == customer_id)
+    from_order = query.all()
+
+    for item_c in from_order:
+        for item_p in from_product:
+            if item_p[0] == item_c[0]:
+                sub_product = item_p[1] - item_c[1]
+                query = session.query(Products).filter_by(
+                    product_id= item_p[0]).first()
+                query.quantity = sub_product
+                session.commit()
+
+    # delete item in cart_items
+    query = session.query(CartItems).join(
+        Cart, Cart.cart_id == CartItems.cart_id).filter(
+        Cart.customer_id == customer_id).all()
+    for item in query:
+        session.delete(item)
+        session.commit()
