@@ -150,3 +150,4 @@ async def place_order(
     p_in_product = query.all()
     print(p_in_product)
     # subtract product
+    i
