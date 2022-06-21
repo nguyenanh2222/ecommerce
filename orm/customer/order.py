@@ -41,6 +41,7 @@ router = APIRouter()
         success_status_code=status.HTTP_200_OK
     )
 )
+
 async def get_orders(
         page: int = Query(1, description="Trang"),
         size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
