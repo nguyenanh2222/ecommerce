@@ -41,7 +41,6 @@ router = APIRouter()
         success_status_code=status.HTTP_200_OK
     )
 )
-
 async def get_orders(
         page: int = Query(1, description="Trang"),
         size: int = Query(20, description="Kích thuớc 1 trang có bao nhiu sản phẩm"),
@@ -93,21 +92,22 @@ async def place_order(
         customer_id: int = Query(...),
         order: OrderReq = Body(...)
 ):
-    # insert into OrderItems
+    # insert into Orders
     session: Session = SessionLocal()
-    stmt = insert(Orders).values(
-        customer_id=f"{customer_id}",
-        total_amount=f"{order.total_amount}",
-        status=f"{order.status}",
-        time_open=f"{order.time_open}").returning(
-        Orders.order_id
-    )
-
-    session.execute(stmt)
+    _rs = session.query(CartItems).join(
+        Cart, Cart.cart_id == CartItems.cart_id).filter(
+        Cart.customer_id == customer_id).all()
+    order.total_amount = sum(_rs.q)
+    session.add(Orders(
+        customer_id=customer_id,
+        total_amount=order.total_amount,
+        status=order.status,
+        time_open=order.time_open
+    ))
     session.commit()
 
     # insert into OrderItems
-    query = session.query(
+    _rs = session.query(
         Orders.order_id,
         CartItems.product_id,
         CartItems.product_name,
@@ -118,20 +118,24 @@ async def place_order(
         CartItems, CartItems.cart_id == Cart.cart_id).where(
         Orders.customer_id == customer_id
     ).all()
-
-    for item in query:
+    list_cart_items = []
+    for item in _rs:
+        _rs = dict(zip(
+            ['order_id', 'product_id', 'product_name', 'total_price', 'quantity', 'price']
+            , item))
+        list_cart_items.append(_rs)
+    for cart_item in list_cart_items:
         session.add(OrderItems(
-            order_id=item[0],
-            product_id=item[1],
-            product_name=item[2],
-            total_price=item[4] * item[5],
-            quantity=item[4],
-            price=item[5]
+            order_id=cart_item['order_id'],
+            product_id=cart_item['product_id'],
+            product_name=cart_item['product_name'],
+            total_price=cart_item['total_price'],
+            quantity=cart_item['quantity'],
+            price=cart_item['price']
         ))
-        session.execute(stmt)
         session.commit()
 
-    #update column quantity on products table
+    # update column quantity on products table
     query = session.query(
         Products.product_id, Products.quantity
     ).join(
@@ -152,7 +156,7 @@ async def place_order(
             if item_p[0] == item_c[0]:
                 sub_product = item_p[1] - item_c[1]
                 query = session.query(Products).filter_by(
-                    product_id= item_p[0]).first()
+                    product_id=item_p[0]).first()
                 query.quantity = sub_product
                 session.commit()
 
@@ -161,5 +165,12 @@ async def place_order(
         Cart, Cart.cart_id == CartItems.cart_id).filter(
         Cart.customer_id == customer_id).all()
     for item in query:
+        session.delete(item)
+        session.commit()
+
+    # delete item in cart table
+    _rs = session.query(Cart).filter(
+        Cart.customer_id == customer_id).all()
+    for item in _rs:
         session.delete(item)
         session.commit()

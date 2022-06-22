@@ -23,39 +23,51 @@ class ProductReq(BaseModel):
 
 router = APIRouter()
 
-
+#
 @router.get(
-    path="/all/products"
-)
-async def get_products():
-    session: Session = SessionLocal()
-    return session.query(Products).all()
-
-
-@router.get(
-    path="/{id}",
-)
-async def get_product(id: int):
-    session: Session = SessionLocal()
-    return session.query(Products).get(id)
-
-
-@router.put(
-    path="/{id}/update",
+    path="/products",
     status_code=status.HTTP_200_OK,
     responses=swagger_response(
         response_model=DataResponse[ProductReq],
         success_status_code=status.HTTP_200_OK
     )
 )
-async def update_product(product_id: int, product: ProductReq):
-    session = SessionLocal()
-    _rs = session.query(Products).filter_by(product_id=product_id).first()
-    _rs.name = product.name
-    _rs.price = product.price
-    _rs.category = product.category
-    _rs.quantity = product.quantity
-    _rs.description = product.description
-    _rs.created_time = product.created_time
-    session.commit()
-    return session.query(Products).get(product_id)
+async def get_products():
+    session: Session = SessionLocal()
+    _rs = session.query(Products).all()
+    return DataResponse(data=_rs)
+
+
+@router.get(
+    path="/{id}",
+    status_code=status.HTTP_200_OK,
+    responses= swagger_response(
+        response_model=DataResponse[ProductReq],
+        success_status_code=status.HTTP_200_OK
+    )
+)
+async def get_product(id: int):
+    session: Session = SessionLocal()
+    _rs = session.query(Products).get(id)
+    return DataResponse(data=_rs)
+
+#
+# @router.put(
+#     path="/{id}/update",
+#     status_code=status.HTTP_200_OK,
+#     responses=swagger_response(
+#         response_model=DataResponse[ProductReq],
+#         success_status_code=status.HTTP_200_OK
+#     )
+# )
+# async def update_product(product_id: int, product: ProductReq):
+#     session = SessionLocal()
+#     _rs = session.query(Products).filter_by(product_id=product_id).first()
+#     _rs.name = product.name
+#     _rs.price = product.price
+#     _rs.category = product.category
+#     _rs.quantity = product.quantity
+#     _rs.description = product.description
+#     _rs.created_time = product.created_time
+#     session.commit()
+#     return session.query(Products).get(product_id)

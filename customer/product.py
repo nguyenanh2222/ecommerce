@@ -21,6 +21,8 @@ class ProductReq(BaseModel):
     description: str = Field(...)
     category: str = Field(...)
     created_time: datetime = Field(...)
+
+
 router = APIRouter()
 
 
