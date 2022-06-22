@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, DATE
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, backref
 
 Base = declarative_base()
 
@@ -30,7 +30,6 @@ class Products(Base):
     price = Column(DECIMAL)
     quantity = Column(Integer)
     created_time = Column(DATE)
-
 
 class Cart(Base):
     __tablename__ = "cart"
@@ -64,7 +63,6 @@ class CartItems(Base):
 
 
 
-
 class Orders(Base):
     __tablename__ = "orders"
 
@@ -85,7 +83,9 @@ class OrderItems(Base):
     __tablename__ = "order_items"
     product_id = Column(Integer,
                         ForeignKey("products.product_id"),
-                        nullable=True)
+                        nullable=True
+                        )
+
     product_name = Column(String)
     quantity = Column(Integer)
     price = Column(DECIMAL)
@@ -96,3 +96,4 @@ class OrderItems(Base):
     order_items_id = Column(Integer,
                             primary_key=True,
                             nullable=False)
+
