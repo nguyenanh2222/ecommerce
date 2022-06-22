@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from starlette import status
 
 from database import SessionLocal
 from orm.models import Customer
 from project.core.schemas import DataResponse
+from project.core.swagger import swagger_response
 
 router = APIRouter()
 
@@ -18,18 +20,23 @@ class CustomerReq(BaseModel):
     password: str = Field(...)
 
 
-@router.get(
-    path="/all/customers",
-    deprecated=True
-)
-async def get_customers():
-    session: Session = SessionLocal()
-    return session.query(Customer).all()
+class CustomerRes(BaseModel):
+    customer_id: int = Field(None)
+    password: str = Field(None)
+    name: str = Field(None)
+    phone: str = Field(None)
+    address: str = Field(None)
+    email: str = Field(None)
+    username: str = Field(None)
 
 
 @router.get(
-    path="/{id}",
-    deprecated=True
+    path="/customer{id}/profile",
+    status_code=status.HTTP_200_OK,
+    responses=swagger_response(
+        response_model=DataResponse[CustomerRes],
+        success_status_code=status.HTTP_200_OK
+    )
 )
 async def get_customer(id: int):
     session: Session = SessionLocal()
@@ -37,7 +44,12 @@ async def get_customer(id: int):
 
 
 @router.put(
-    path="/{id}",
+    path="/customer{id}/profile",
+    status_code=status.HTTP_200_OK,
+    responses=swagger_response(
+        response_model=DataResponse[CustomerRes],
+        success_status_code=status.HTTP_200_OK
+    )
 )
 async def update_profile(customer_id: int,
                          customer: CustomerReq):
@@ -49,11 +61,17 @@ async def update_profile(customer_id: int,
     _rs.password = customer.password
     _rs.username = customer.username
     session.commit()
-    return session.query(Customer).get(customer_id)
+    result = session.query(Customer).get(customer_id)
+    return DataResponse(data=result)
 
 
 @router.post(
-    path="/{id}"
+    path="/{id}",
+    status_code=status.HTTP_201_CREATED,
+    responses=swagger_response(
+        response_model=DataResponse[CustomerRes],
+        success_status_code=status.HTTP_201_CREATED
+    )
 )
 async def create_profile(
         customer: CustomerReq
@@ -66,18 +84,4 @@ async def create_profile(
                          username=customer.username)
                 )
     session.commit()
-    return DataResponse(data="")
-
-
-@router.delete(
-    path="/delete",
-    deprecated=True
-)
-async def delete_customer(
-        customer_id: int
-):
-    session: Session = SessionLocal()
-    _rs = session.get(Customer, customer_id)
-    session.delete(_rs)
-    session.commit()
-    return DataResponse(data="")
+    return DataResponse(data=status.HTTP_201_CREATED)
