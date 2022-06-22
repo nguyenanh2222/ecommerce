@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.engine import CursorResult, Row
 from sqlalchemy.orm import Session
 
 from starlette import status

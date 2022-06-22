@@ -1,14 +1,10 @@
-from decimal import Decimal
-
 from fastapi import APIRouter, Query
 from starlette import status
 
 from database import SessionLocal
-from project.core.schemas import PageResponse, DataResponse
+from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 from datetime import datetime
-from datetime import date
-from customer.order import OrderRes
 from sqlalchemy.engine import CursorResult
 router = APIRouter()
 

@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, DATE
-from sqlalchemy.orm import declarative_base, relationship, backref
+from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, DATE, MetaData
+from sqlalchemy.orm import declarative_base, relationship
 
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema="ecommerce"))
 
 
 class Customer(Base):
@@ -30,6 +30,7 @@ class Products(Base):
     price = Column(DECIMAL)
     quantity = Column(Integer)
     created_time = Column(DATE)
+
 
 class Cart(Base):
     __tablename__ = "cart"
@@ -60,7 +61,6 @@ class CartItems(Base):
     total_price = Column(DECIMAL)
     quantity = Column(Integer)
     price = Column(DECIMAL)
-
 
 
 class Orders(Base):
@@ -96,4 +96,3 @@ class OrderItems(Base):
     order_items_id = Column(Integer,
                             primary_key=True,
                             nullable=False)
-

@@ -2,17 +2,15 @@ import math
 
 from datetime import datetime
 from decimal import Decimal
-from operator import or_
 
-from fastapi import APIRouter, Query, Body, Path
+from fastapi import APIRouter, Query, Path
 from pydantic import BaseModel, Field
-from sqlalchemy import asc, insert, func, select, delete
 from sqlalchemy.orm import Session, selectinload
 from starlette import status
 
 from database import SessionLocal
 from order_status import EOrderStatus
-from orm.models import Products, Orders, OrderItems, Cart, CartItems
+from orm.models import Orders, OrderItems
 from project.core.schemas import DataResponse, PageResponse, Sort
 from project.core.swagger import swagger_response
 
