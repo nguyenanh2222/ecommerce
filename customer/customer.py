@@ -16,6 +16,7 @@ class CustomerReq(BaseModel):
     username: str = Field(...)
     password: str = Field(...)
 
+
 class CustomerRes(BaseModel):
     customer_id: int = Field(None)
     password: str = Field(None)

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from starlette import status
 
 from database import SessionLocal
+from order_status import EOrderStatus
 from orm.models import Products, Orders, OrderItems, Cart, CartItems
 from project.core.schemas import DataResponse, PageResponse, Sort
 from project.core.swagger import swagger_response
@@ -49,7 +50,7 @@ async def get_orders(
         product_name: str = Query(None, description="Tên sản phẩm có trong đơn hàng"),
         sort_direction: Sort.Direction = Query(None, description="Chiều sắp xếp theo ngày tạo hóa đơn asc|desc"),
 ):
-    session = SessionLocal()
+    session: Session = SessionLocal()
     query = session.query(
         Orders
     ).options(selectinload(Orders.order_items))
@@ -92,20 +93,7 @@ async def place_order(
         customer_id: int = Query(...),
         order: OrderReq = Body(...)
 ):
-    # insert into Orders
     session: Session = SessionLocal()
-    _rs = session.query(CartItems).join(
-        Cart, Cart.cart_id == CartItems.cart_id).filter(
-        Cart.customer_id == customer_id).all()
-    order.total_amount = sum(_rs.q)
-    session.add(Orders(
-        customer_id=customer_id,
-        total_amount=order.total_amount,
-        status=order.status,
-        time_open=order.time_open
-    ))
-    session.commit()
-
     # insert into OrderItems
     _rs = session.query(
         Orders.order_id,
@@ -116,14 +104,13 @@ async def place_order(
         CartItems.price
     ).join(Cart, Orders.customer_id == Cart.customer_id).join(
         CartItems, CartItems.cart_id == Cart.cart_id).where(
-        Orders.customer_id == customer_id
-    ).all()
+        Orders.customer_id == customer_id)
     list_cart_items = []
     for item in _rs:
-        _rs = dict(zip(
+        _dict_rs = dict(zip(
             ['order_id', 'product_id', 'product_name', 'total_price', 'quantity', 'price']
             , item))
-        list_cart_items.append(_rs)
+        list_cart_items.append(_dict_rs)
     for cart_item in list_cart_items:
         session.add(OrderItems(
             order_id=cart_item['order_id'],
@@ -134,6 +121,21 @@ async def place_order(
             price=cart_item['price']
         ))
         session.commit()
+
+    # insert into Orders, calculate total_amount
+    session: Session = SessionLocal()
+    _rs = session.query(func.sum(OrderItems.total_price)).join(
+        Orders, OrderItems.order_id == Orders.order_id
+    ).filter(
+        Orders.customer_id == customer_id).first()
+    total_amount = _rs
+    session.add(Orders(
+        customer_id=customer_id,
+        total_amount=total_amount[0],
+        status=EOrderStatus.OPEN_ORDER,
+        time_open=order.time_open
+    ))
+    session.commit()
 
     # update column quantity on products table
     query = session.query(
@@ -168,9 +170,3 @@ async def place_order(
         session.delete(item)
         session.commit()
 
-    # delete item in cart table
-    _rs = session.query(Cart).filter(
-        Cart.customer_id == customer_id).all()
-    for item in _rs:
-        session.delete(item)
-        session.commit()
