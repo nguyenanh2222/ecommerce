@@ -25,7 +25,7 @@ router = APIRouter()
 
 #
 @router.get(
-    path="/products",
+    path="/",
     status_code=status.HTTP_200_OK,
     responses=swagger_response(
         response_model=DataResponse[ProductReq],
@@ -53,7 +53,7 @@ async def get_product(id: int):
 
 
 @router.put(
-    path="/{id}/update",
+    path="/{id}",
     status_code=status.HTTP_200_OK,
     responses=swagger_response(
         response_model=DataResponse[ProductReq],

@@ -37,7 +37,7 @@ class CartItemsRes(BaseModel):
 router = APIRouter()
 
 @router.get(
-    path="'/",
+    path="/",
     description= "Get item include cart by customer_iod",
     responses=swagger_response(
         response_model=DataResponse[CartRes],
