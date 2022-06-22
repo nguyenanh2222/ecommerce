@@ -144,7 +144,7 @@ async def update_product(id: int, product: ProductReq):
 )
 async def delete_product(id: int = Query(...)):
     session: Session = SessionLocal()
-    query = session.query(Products).filter(
+    session.query(Products).filter(
         Products.product_id == id).delete(
         synchronize_session=False
     )

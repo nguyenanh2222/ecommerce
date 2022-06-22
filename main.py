@@ -22,6 +22,8 @@ from orm.customer.cart import router as orm_customer_cart_router
 from orm.customer.product import router as orm_customer_product_router
 
 from orm.admin.product import router as orm_admin_product_router
+from orm.admin.order import router as orm_admin_order_router
+from orm.admin.analysis import router as orm_admin_order_analysis
 
 
 
@@ -73,6 +75,10 @@ router_orm.include_router(router=orm_customer_product_router, prefix="/customer/
                           tags=[Tags.customer_orm])
 
 router_orm.include_router(router=orm_admin_product_router, prefix="/admin/product",
+                          tags=[Tags.admin_orm])
+router_orm.include_router(router=orm_admin_order_router, prefix="/admin/order",
+                          tags=[Tags.admin_orm])
+router_orm.include_router(router=orm_admin_order_analysis, prefix="/admin/analysis",
                           tags=[Tags.admin_orm])
 
 app.include_router(router)

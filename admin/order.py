@@ -95,7 +95,6 @@ async def change_order_status(
         f""" UPDATE ecommerce.orders SET status = '{next_status}' WHERE order_id = {id} RETURNING *"""
     )
     result = _rs.fetchone()
-    print(result)
     session.commit()
     return DataResponse(data=result)
 
