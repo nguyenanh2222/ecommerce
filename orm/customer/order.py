@@ -91,7 +91,7 @@ async def get_orders(
 )
 async def place_order(
         customer_id: int = Query(...),
-        order: OrderReq = Body(...)
+
 ):
     session: Session = SessionLocal()
     # insert into OrderItems
@@ -123,19 +123,19 @@ async def place_order(
         session.commit()
 
     # insert into Orders, calculate total_amount
-    session: Session = SessionLocal()
-    _rs = session.query(func.sum(OrderItems.total_price)).join(
-        Orders, OrderItems.order_id == Orders.order_id
-    ).filter(
-        Orders.customer_id == customer_id).first()
-    total_amount = _rs
-    session.add(Orders(
-        customer_id=customer_id,
-        total_amount=total_amount[0],
-        status=EOrderStatus.OPEN_ORDER,
-        time_open=order.time_open
-    ))
-    session.commit()
+    # session: Session = SessionLocal()
+    # _rs = session.query(func.sum(OrderItems.total_price)).join(
+    #     Orders, OrderItems.order_id == Orders.order_id
+    # ).filter(
+    #     Orders.customer_id == customer_id).first()
+    # total_amount = _rs
+    # session.add(Orders(
+    #     customer_id=customer_id,
+    #     total_amount=total_amount[0],
+    #     status=EOrderStatus.OPEN_ORDER,
+    #     time_open=
+    # ))
+    # session.commit()
 
     # update column quantity on products table
     query = session.query(
@@ -170,3 +170,6 @@ async def place_order(
         session.delete(item)
         session.commit()
 
+    _rs = session.query(Orders).filter(
+        Orders.customer_id == customer_id)
+    return DataResponse(data=_rs.all())

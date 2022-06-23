@@ -77,11 +77,13 @@ async def create_profile(
         customer: CustomerReq
 ):
     session: Session = SessionLocal()
-    session.add(Customer(name=customer.name,
+    customer = Customer(name=customer.name,
                          phone=customer.phone,
                          email=customer.email,
                          password=customer.password,
                          username=customer.username)
-                )
+    session.add(customer)
+    session.flush()
     session.commit()
-    return DataResponse(data=status.HTTP_201_CREATED)
+    session.refresh(customer)
+    return DataResponse(data=customer)

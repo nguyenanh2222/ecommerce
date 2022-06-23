@@ -80,7 +80,7 @@ async def get_orders(
 
 @router.put(
     path="/{id}",
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_204_NO_CONTENT,
     description="Changing status"
 )
 async def change_order_status(
@@ -96,5 +96,5 @@ async def change_order_status(
         {Orders.status: next_status},
         synchronize_session=False)
     session.commit()
-    return DataResponse(data=status.HTTP_200_OK)
+    return DataResponse(data=None)
 

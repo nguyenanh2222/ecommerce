@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from starlette import status
@@ -126,7 +127,9 @@ async def get_product(id: int):
 )
 async def update_product(id: int, product: ProductReq):
     session: Session = SessionLocal()
-    session.add(Products(
+    session.execute(update(Products).where(
+        Products.product_id == id
+    ).values(
         description=product.description,
         category=product.category,
         name=product.name,
@@ -135,7 +138,8 @@ async def update_product(id: int, product: ProductReq):
         created_time=product.created_time
     ))
     session.commit()
-    return DataResponse(data=status.HTTP_201_CREATED)
+    _rs = session.query(Products).filter(Products.product_id == id).first()
+    return DataResponse(data=_rs)
 
 @router.delete(
     path="/{id}",

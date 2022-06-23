@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Query
+from sqlalchemy import func
 from starlette import status
 
 from database import SessionLocal
+from orm.models import Orders
 from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 from datetime import datetime
@@ -32,8 +34,10 @@ async def analysis_revenue_in_period(
     AND time_open <= '{end_datetime}'
     GROUP BY order_id 
     """
+    session.query(func.sum(total_product))
+
     _rs: CursorResult = session.execute(query)
-    return DataResponse(date=_rs.fetchall())
+    return DataResponse(data=_rs.fetchall())
 
 @router.get(
     path="/",
@@ -54,8 +58,6 @@ async def line_chart(
     AND time_open <= '{day_ended}' 
     GROUP BY time_open
     """
-    print(query)
     _rs: CursorResult = session.execute(query)
     result = _rs.fetchall()
-    print(result[0][1])
     return DataResponse(data=result)
