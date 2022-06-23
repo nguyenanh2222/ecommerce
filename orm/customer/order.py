@@ -2,16 +2,13 @@ import math
 
 from datetime import datetime
 from decimal import Decimal
-from operator import or_
 
-from fastapi import APIRouter, Query, Body
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import asc, insert, func, select, delete
 from sqlalchemy.orm import Session, selectinload
 from starlette import status
 
 from database import SessionLocal
-from order_status import EOrderStatus
 from orm.models import Products, Orders, OrderItems, Cart, CartItems
 from project.core.schemas import DataResponse, PageResponse, Sort
 from project.core.swagger import swagger_response
@@ -81,7 +78,7 @@ async def get_orders(
 
 
 @router.post(
-    path="/",
+    path="/{customer_id}/",
     status_code=status.HTTP_201_CREATED,
     description="creating orders, including order_items",
     responses=swagger_response(
@@ -160,7 +157,7 @@ async def place_order(
     return DataResponse(data=_rs.all())
 
 @router.post(
-    path="/order",
+    path="/",
     status_code=status.HTTP_201_CREATED,
     responses=swagger_response(
         success_status_code=status.HTTP_201_CREATED,

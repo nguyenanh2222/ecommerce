@@ -65,18 +65,18 @@ router.include_router(router=customers_router, prefix="/customers", tags=[Tags.c
 router.include_router(router=analysis_admin_router, prefix="/admin/analysis", tags=[Tags.admin])
 
 router_orm = APIRouter(prefix="/api/v2")
-router_orm.include_router(router=orm_customer_router, prefix="/customer",
+router_orm.include_router(router=orm_customer_router, prefix="/customers",
                           tags=[Tags.customer_orm])
-router_orm.include_router(router=orm_customer_order_router, prefix="/customer/order",
+router_orm.include_router(router=orm_customer_order_router, prefix="/customer/orders",
                           tags=[Tags.customer_orm])
-router_orm.include_router(router=orm_customer_cart_router, prefix="/customer/cart",
+router_orm.include_router(router=orm_customer_cart_router, prefix="/customer/carts",
                           tags=[Tags.customer_orm])
-router_orm.include_router(router=orm_customer_product_router, prefix="/customer/product",
+router_orm.include_router(router=orm_customer_product_router, prefix="/customer/products",
                           tags=[Tags.customer_orm])
 
-router_orm.include_router(router=orm_admin_product_router, prefix="/admin/product",
+router_orm.include_router(router=orm_admin_product_router, prefix="/admin/products",
                           tags=[Tags.admin_orm])
-router_orm.include_router(router=orm_admin_order_router, prefix="/admin/order",
+router_orm.include_router(router=orm_admin_order_router, prefix="/admin/orders",
                           tags=[Tags.admin_orm])
 router_orm.include_router(router=orm_admin_order_analysis, prefix="/admin/analysis",
                           tags=[Tags.admin_orm])

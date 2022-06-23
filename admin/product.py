@@ -145,7 +145,7 @@ async def update_product(id: int, product: ProductReq):
 
 
 @router.delete(
-    path="/{id_}",
+    path="/{id}",
     status_code=status.HTTP_204_NO_CONTENT
 )
 async def delete_product(id_: int = Query(...)):

@@ -66,6 +66,7 @@ async def create_customer(customer: CustomerReq = Body(...)):
 @router.put(
     path="/{customer_id}/profile",
     status_code=status.HTTP_200_OK,
+    deprecated=True,
     responses=swagger_response(
         response_model=DataResponse[CustomerRes],
         success_status_code=status.HTTP_200_OK

@@ -68,7 +68,7 @@ async def update_profile(customer_id: int,
 
 
 @router.post(
-    path="/{id}",
+    path="/",
     status_code=status.HTTP_201_CREATED,
     responses=swagger_response(
         response_model=DataResponse[CustomerRes],
