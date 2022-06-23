@@ -115,3 +115,12 @@ class TestSimpleCase:
                 "created_time": "2022-06-23T05:03:15.430Z"
         }
         self.executor_customer.put_product(7, product)
+
+    def test_post_order(self):
+        order = {
+                    "total_amount": 0,
+                    "time_open": "2022-06-23T08:17:07.736Z",
+                    "status": "string"
+                    }
+        self.executor_customer.post_order(3, order)
+

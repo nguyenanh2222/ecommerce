@@ -122,21 +122,6 @@ async def place_order(
         ))
         session.commit()
 
-    # insert into Orders, calculate total_amount
-    # session: Session = SessionLocal()
-    # _rs = session.query(func.sum(OrderItems.total_price)).join(
-    #     Orders, OrderItems.order_id == Orders.order_id
-    # ).filter(
-    #     Orders.customer_id == customer_id).first()
-    # total_amount = _rs
-    # session.add(Orders(
-    #     customer_id=customer_id,
-    #     total_amount=total_amount[0],
-    #     status=EOrderStatus.OPEN_ORDER,
-    #     time_open=
-    # ))
-    # session.commit()
-
     # update column quantity on products table
     query = session.query(
         Products.product_id, Products.quantity
@@ -173,3 +158,23 @@ async def place_order(
     _rs = session.query(Orders).filter(
         Orders.customer_id == customer_id)
     return DataResponse(data=_rs.all())
+
+@router.post(
+    path="/order",
+    status_code=status.HTTP_201_CREATED,
+    responses=swagger_response(
+        success_status_code=status.HTTP_201_CREATED,
+        response_model=DataResponse
+    )
+)
+async def add_order(customer_id: int, order_req: OrderReq):
+    session: Session = SessionLocal()
+    order = Orders(
+        customer_id=customer_id,
+        time_open=order_req.time_open,
+        total_amount=order_req.total_amount,
+        status=order_req.status)
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return DataResponse(data=order)

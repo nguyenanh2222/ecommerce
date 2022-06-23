@@ -52,3 +52,8 @@ class CustomerAPIExecutor:
         res = client.put("/api/v2/customer/product/{id}?product_id="+f"{product_id}",
                          json=body)
         assert res.status_code == status.HTTP_200_OK
+
+    def post_order(self, customer_id: id, body: Dict):
+        res = client.post(f"/api/v2/customer/order/order?customer_id={customer_id}",
+                          json=body)
+        assert res.status_code == status.HTTP_201_CREATED

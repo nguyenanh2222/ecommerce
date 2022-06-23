@@ -74,6 +74,7 @@ async def add_item_to_cart(
     cart_id = _rs.cart_id
     if  cart_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
     cart_item = CartItems(
         product_id=item.product_id,
         product_name=item.product_name,
