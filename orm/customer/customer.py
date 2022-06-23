@@ -1,10 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette import status
 
 from database import SessionLocal
-from orm.models import Customer
+from orm.models import Customer, Cart
 from project.core.schemas import DataResponse
 from project.core.swagger import swagger_response
 
@@ -55,6 +55,8 @@ async def update_profile(customer_id: int,
                          customer: CustomerReq):
     session: Session = SessionLocal()
     _rs = session.query(Customer).filter_by(customer_id=customer_id).first()
+    if _rs == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     _rs.name = customer.name
     _rs.phone = customer.phone
     _rs.email = customer.email
@@ -78,12 +80,16 @@ async def create_profile(
 ):
     session: Session = SessionLocal()
     customer = Customer(name=customer.name,
-                         phone=customer.phone,
-                         email=customer.email,
-                         password=customer.password,
-                         username=customer.username)
+                        phone=customer.phone,
+                        email=customer.email,
+                        password=customer.password,
+                        username=customer.username)
     session.add(customer)
     session.flush()
     session.commit()
     session.refresh(customer)
+
+    cart = Cart(customer_id=customer.customer_id)
+    session.add(cart)
+    session.commit()
     return DataResponse(data=customer)

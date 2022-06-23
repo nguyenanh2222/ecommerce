@@ -70,7 +70,7 @@ class TestSimpleCase:
             "username": "anh23652",
             "password": "256321"
         }
-        self.executor_customer.put_customer(2, customer)
+        self.executor_customer.put_customer(1, customer)
 
     def test_customer_post_profile(self):
         customer = {
@@ -97,7 +97,7 @@ class TestSimpleCase:
             "price": 0,
             "quantity": 0,
             "total_price": 0,
-            "product_id": 7,
+            "product_id": 2,
             "product_name": "string"
         }
         self.executor_customer.put_item_cart(1, cart_item)

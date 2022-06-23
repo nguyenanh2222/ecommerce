@@ -71,16 +71,14 @@ async def add_item_to_cart(
     session: Session = SessionLocal()
     _rs = session.query(Cart).filter(
         Cart.customer_id == customer_id).first()
-    cart_id = _rs.cart_id
-    if  cart_id is None:
+    if _rs is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
     cart_item = CartItems(
         product_id=item.product_id,
         product_name=item.product_name,
         price=item.price,
         total_price=item.total_price,
-        cart_id= cart_id
+        cart_id=_rs.cart_id
     )
     session.add(cart_item)
     session.flush()

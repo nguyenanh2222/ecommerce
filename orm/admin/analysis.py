@@ -51,14 +51,6 @@ async def line_chart(
         day_started: datetime = Query(datetime.strptime("2021-11-29", "%Y-%m-%d")),
         day_ended: datetime = Query(datetime.strptime("2021-11-29", "%Y-%m-%d"))
 ):
-    session = SessionLocal()
-    query = f""" SELECT time_open, SUM(total_amount) FROM ecommerce.orders
-    WHERE time_open >= '{day_started}'
-    AND time_open <= '{day_ended}' 
-    GROUP BY time_open
-    """
-    _rs: CursorResult = session.execute(query)
-    result = _rs.fetchall()
     session: Session = SessionLocal()
     _rs = session.query(Orders.time_open, func.sum(Orders.total_amount)).filter(
         Orders.time_open >= f'{day_started}',

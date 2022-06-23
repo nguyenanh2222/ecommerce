@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette import status
@@ -55,14 +55,18 @@ async def get_product(id: int):
 @router.put(
     path="/{id}",
     status_code=status.HTTP_200_OK,
+    deprecated=True,
     responses=swagger_response(
         response_model=DataResponse[ProductReq],
-        success_status_code=status.HTTP_200_OK
+        success_status_code=status.HTTP_200_OK,
+
     )
 )
 async def update_product(product_id: int, product: ProductReq):
     session: Session = SessionLocal()
     _rs = session.query(Products).filter_by(product_id=product_id).first()
+    if _rs is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     _rs.name = product.name
     _rs.price = product.price
     _rs.category = product.category
