@@ -1,5 +1,6 @@
 from typing import Dict
 
+from requests import Response
 from starlette import status
 
 from test.client import client
@@ -13,7 +14,7 @@ class CustomerAPIExecutor:
         assert res.status_code == status.HTTP_200_OK
 
     def put_customer(self, customer_id: int, body: Dict):
-        res = client.put("/api/v2/customer/customer{id}/profile?customer_id=" + f"{customer_id}",
+        res = client.put("/api/v2/customers/customer{id}/profile?"+f"customer_id={customer_id}",
                          json=body)
         assert res.status_code == status.HTTP_200_OK
 
@@ -36,7 +37,7 @@ class CustomerAPIExecutor:
         assert res.status_code == status.HTTP_200_OK
 
     def put_item_cart(self, customer_id: int, body: Dict):
-        res = client.put(f"/api/v2/customer/cart/items?customer_id={customer_id}",
+        res = client.put(f"/api/v1/customers/cart/items?customer_id={customer_id}",
                          json=body)
         assert res.status_code == status.HTTP_200_OK
 
@@ -44,12 +45,12 @@ class CustomerAPIExecutor:
         res = client.get(f"/api/v2/customer/product")
         assert res.status_code == status.HTTP_200_OK
 
-    def get_product_by_id(self, id: int):
+    def get_product_by_id(self, id: int) -> Response:
         res = client.get(f"/api/v2/customer/product/{id}")
-        assert res.status_code == status.HTTP_200_OK
+        return res
 
     def put_product(self, product_id: int, body: Dict):
-        res = client.put("/api/v2/customer/product/{id}?product_id="+f"{product_id}",
+        res = client.put("/api/v2/customer/product/{id}?product_id=" + f"{product_id}",
                          json=body)
         assert res.status_code == status.HTTP_200_OK
 

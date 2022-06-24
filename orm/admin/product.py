@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -127,6 +127,10 @@ async def get_product(id: int):
 )
 async def update_product(id: int, product: ProductReq):
     session: Session = SessionLocal()
+    _rs = session.query(Products).filter(Products.product_id == id).first()
+    if _rs == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if product.name or product.price or product.category or product.quantityd
     session.execute(update(Products).where(
         Products.product_id == id
     ).values(

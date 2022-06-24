@@ -30,7 +30,13 @@ class Products(Base):
     price = Column(DECIMAL)
     quantity = Column(Integer)
     created_time = Column(DATE)
-
+    #
+    # order_item = relationship(
+    #     "OrderItems",
+    #     back_populates="products",
+    #     cascade="all, delete",
+    #     passive_deletes=True,
+    # )
 
 class Cart(Base):
     __tablename__ = "cart"
@@ -96,3 +102,4 @@ class OrderItems(Base):
     order_items_id = Column(Integer,
                             primary_key=True,
                             nullable=False)
+    product = relationship("Products")
