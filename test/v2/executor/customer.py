@@ -58,3 +58,4 @@ class CustomerAPIExecutor:
         res = client.post(f"/api/v2/customer/order/order?customer_id={customer_id}",
                           json=body)
         assert res.status_code == status.HTTP_201_CREATED
+

@@ -49,26 +49,50 @@ class AdminAPIExecutor:
         res = client.put(f"/api/v1/products/{id}")
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
-    def put_product_bad_request(self, id: int, body: Dict):
-        res = client.put(f"/api/v1/products/{id}", json=body)
+    def put_product_bad_request(self, id: int,
+                                body: Dict):
+        res = client.put(f"/api/v2/admin/products/{id}", json=body)
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 
     def post_product(self, body: Dict):
-        res = client.post("/api/v2/admin/product/", json=body)
+        res = client.post("api/v2/admin/products/", json=body)
         assert res.status_code == status.HTTP_201_CREATED
 
     def delete_product(self, id: int):
-        res = client.delete(f"/api/v2/admin/product/{id}")
+        res = client.delete(f"/api/v2/admin/products/{id}")
         assert res.status_code == status.HTTP_204_NO_CONTENT
 
-    def get_order(self, page: int, size: int):
-        res = client.get(f"/api/v2/admin/order/?page={page}&size={size}")
+    def delete_product_existing(self, id: int):
+        res = client.delete(f"/api/v2/admin/products/{id}")
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+    def get_order_page_size(self, page: int, size: int):
+        res = client.get(
+            f"/api/v2/admin/order/?page={page}&size={size}")
+        return res.status_code == status.HTTP_200_OK
+
+    def get_order_customer_order_id(self, customer_id: int,
+                                    order_id: int):
+        res = client.get(
+            f"/api/v2/admin/order/?customer_id={customer_id}&order_id={order_id}")
+        return res.status_code == status.HTTP_200_OK
+
+    def get_product_sort_direction(self, product_id: int,
+                                   sort_direction: str):
+        res = client.get(
+            f"/api/v2/admin/order/?product_id={product_id}&sort_direction={sort_direction}")
         return res.status_code == status.HTTP_200_OK
 
     def put_order(self, id: int, next_status: str):
         res = client.put(
             f"/api/v2/admin/order{id}?next_status={next_status}")
         return res.status_code == status.HTTP_201_CREATED
+
+    def put_order_existing(self, id: int, next_status: str):
+        res = client.put(
+            f"/api/v2/admin/order{id}?next_status={next_status}")
+        return res.status_code == status.HTTP_404_NOT_FOUND
+
 
     def get_analysis_revenue(self,
                              start_datetime: date,

@@ -47,16 +47,19 @@ router = APIRouter()
 )
 async def create_product(product: ProductReq = Body(...)):
     session: Session = SessionLocal()
-    session.add(Products(
+    product = Products(
         name=product.name,
         quantity=product.quantity,
         price=product.price,
         description=product.description,
         category=product.category,
         created_time=product.created_time
-    ))
+    )
+    session.add(product)
+    session.flush()
     session.commit()
-    return DataResponse(data=status.HTTP_201_CREATED)
+    session.refresh(product)
+    return DataResponse(data=product)
 
 
 @router.get(
@@ -130,8 +133,9 @@ async def update_product(id: int, product: ProductReq):
     _rs = session.query(Products).filter(Products.product_id == id).first()
     if _rs == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    if product.name or product.price or product.category or product.quantityd
-    session.execute(update(Products).where(
+    if product.name is not str:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+    _rs = session.execute(update(Products).where(
         Products.product_id == id
     ).values(
         description=product.description,
@@ -141,6 +145,8 @@ async def update_product(id: int, product: ProductReq):
         quantity=product.quantity,
         created_time=product.created_time
     ))
+    if not _rs:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
     session.commit()
     _rs = session.query(Products).filter(Products.product_id == id).first()
     return DataResponse(data=_rs)
@@ -151,9 +157,11 @@ async def update_product(id: int, product: ProductReq):
 )
 async def delete_product(id: int = Query(...)):
     session: Session = SessionLocal()
-    session.query(Products).filter(
-        Products.product_id == id).delete(
-        synchronize_session=False
-    )
+    _rs = session.get(Products, id)
+    if _rs is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    session.query(Products).filter(Products.product_id == id).delete(
+        synchronize_session=False)
     session.commit()
-    return DataResponse(data=None, status_code=status.HTTP_204_NO_CONTENT)
+    return DataResponse(data=None,
+                        status_code=status.HTTP_204_NO_CONTENT)
