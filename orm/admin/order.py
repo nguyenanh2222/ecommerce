@@ -2,9 +2,9 @@ import math
 
 from datetime import datetime
 from decimal import Decimal
-
-from fastapi import APIRouter, Query, Path
+from fastapi import APIRouter, Query, Path, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import update
 from sqlalchemy.orm import Session, selectinload
 from starlette import status
 
@@ -80,7 +80,7 @@ async def get_orders(
 
 @router.put(
     path="/{id}",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_201_CREATED,
     description="Changing status"
 )
 async def change_order_status(
@@ -88,13 +88,16 @@ async def change_order_status(
         next_status: EOrderStatus = Query(..., description="Trạng thái đơn hàng muốn thay đổi"),
 ):
     session: Session = SessionLocal()
-    _rs = session.query(
-        Orders
-    ).filter_by(
-        order_id=id
-    ).update(
+    _rs = session.query(Orders).filter(Orders.order_id == id).first()
+    if _rs is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    _rs = session.query(Orders).filter(
+        Orders.order_id == id).update(
         {Orders.status: next_status},
-        synchronize_session=False)
+        synchronize_session=False
+    )
+    session.flush()
     session.commit()
-    return DataResponse(data=None)
+    _result = session.query(Orders).filter(Orders.order_id == id).all()
+    return DataResponse(data=_result)
 
