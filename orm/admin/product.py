@@ -130,8 +130,8 @@ async def update_product(id: int, product: ProductReq):
     _rs = session.query(Products).filter(Products.product_id == id).first()
     if _rs == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    if product.name or product.price or product.category or product.quantity:
-        session.execute(update(Products).where(
+    if product.name or product.price or product.category or product.quantityd
+    session.execute(update(Products).where(
         Products.product_id == id
     ).values(
         description=product.description,

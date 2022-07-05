@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 
 from database import SessionLocal
-from orm.models import Customer, Cart, Products
+from orm.models import Customer, Cart, Products, Orders
 from test.v2.executor.admin import AdminAPIExecutor
 from test.v2.executor.customer import CustomerAPIExecutor
 
@@ -42,14 +42,39 @@ class TestSimpleCase:
         check = max(_product_id) + 1
         self.executor_admin.get_product_by_id_existing(check)
 
-    def test_admin_post_product(self):
+    def test_admin_put_product_bad_request(self):
         product = {
-            "name": "product name",
+            "name": 123,
             "quantity": 0,
             "price": 0,
-            "description": "product description",
-            "category": "jean",
-            "created_time": "2022-06-22T11:27:26.453Z"
+            "description": "string",
+            "category": "string",
+            "created_time": "2022-06-25T03:49:23.394Z"
+        }
+        session: Session = SessionLocal()
+        _product = Products(
+            description="ao cotton",
+            category="ao",
+            name="ao",
+            price=400000,
+            quantity=5
+        )
+        session.add(_product)
+        session.flush()
+        session.commit()
+        session.refresh(_product)
+        self.executor_admin.put_product_bad_request(
+            _product.product_id,
+            product)
+
+    def test_admin_post_product(self):
+        product = {
+            "name": "string",
+            "quantity": 0,
+            "price": 0,
+            "description": "string",
+            "category": "string",
+            "created_time": "2022-06-25T03:54:19.610Z"
         }
         self.executor_admin.post_product(product)
 
@@ -89,11 +114,12 @@ class TestSimpleCase:
 
     def test_admin_put_product_bad_request(self):
         bad_body = {
-            "name": 2,
+            "name": 123,
             "quantity": 0,
             "price": 0,
             "description": "string",
-            "created_time": 2
+            "category": "string",
+            "created_time": "2022-06-25T03:49:23.394Z"
         }
         session: Session = SessionLocal()
         _product = Products(
@@ -108,19 +134,59 @@ class TestSimpleCase:
         session.flush()
         session.commit()
         session.refresh(_product)
-        self.executor_admin.put_product_bad_request(_product.product_id, bad_body)
+        self.executor_admin.put_product_bad_request(
+            _product.product_id, bad_body)
         session.delete(_product)
         session.commit()
 
     def test_admin_delete_product(self):
-        self.executor_admin.delete_product(1)
+        session: Session = SessionLocal()
+        _rs = session.query(Products.product_id).all()
+        check = _rs[1][0]
+        self.executor_admin.delete_product(check)
 
+    def test_admin_delete_product_existing(self):
+        session: Session = SessionLocal()
+        _rs = session.query(Products.product_id).all()
+        check = max(_rs)[0] + 1
+        self.executor_admin.delete_product_existing(check)
 
-    def test_admin_get_order(self):
-        self.executor_admin.get_order(1, 20)
+    def test_admin_get_order_by_page_size(self):
+        self.executor_admin.get_order_page_size(1, 20)
+
+    def test_admin_get_order_by_customer_order(self):
+        session: Session = SessionLocal()
+        order_id = session.query(Orders.order_id).all()
+        customer_id = session.query(Customer.customer_id).all()
+        self.executor_admin.get_order_customer_order_id(
+            order_id[1][0], customer_id[1][0])
+
+    def test_admin_get_product_sort_direction(self):
+        session: Session = SessionLocal()
+        product_id = session.query(Products.product_id).all()
+        self.executor_admin.get_product_sort_direction(
+            product_id[1][0], 'asc')
+        # tại sao không tạo ra một order để update lại ???????????
 
     def test_admin_put_order(self):
-        self.executor_admin.put_order(2, "OPEN")
+        ...
+        # session: Session = SessionLocal()
+        # order = Orders(
+        #     order_id=,
+        #     customer_id=,
+        #     total_amount=,
+        #     status=,
+        #     time_open=
+        # )
+
+        self.executor_admin.put_order(order_id[0][0], "OPEN")
+
+    def test_admin_put_order_existing(self):
+        session: Session = SessionLocal()
+        _rs = session.query(Orders.order_id).first()
+        check = _rs[0] + 1
+        self.executor_admin.put_order_existing(check, "OPEN")
+
 
     def test_admin_analysis_total(self):
         self.executor_admin.get_analysis_revenue(
@@ -227,14 +293,13 @@ class TestSimpleCase:
         session.commit()
 
         cart_item = {
-          "price": 300000,
-          "quantity": 1,
-          "total_price": 300000,
-          "product_id": _product.product_id,
-          "product_name": "ao"
+            "price": 300000,
+            "quantity": 1,
+            "total_price": 300000,
+            "product_id": _product.product_id,
+            "product_name": "ao"
         }
         self.executor_customer.put_item_cart(_customer.customer_id, cart_item)
-
 
     def test_get_product_by_id(self):
         res = self.executor_customer.get_product_by_id(2)
