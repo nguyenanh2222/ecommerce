@@ -1,5 +1,5 @@
 from enum import Enum
-
+from permissions import router as permissions_router
 import uvicorn
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
@@ -74,12 +74,14 @@ router_orm.include_router(router=orm_customer_cart_router, prefix="/customer/car
 router_orm.include_router(router=orm_customer_product_router, prefix="/customer/products",
                           tags=[Tags.customer_orm])
 
+
 router_orm.include_router(router=orm_admin_product_router, prefix="/admin/products",
                           tags=[Tags.admin_orm])
 router_orm.include_router(router=orm_admin_order_router, prefix="/admin/orders",
                           tags=[Tags.admin_orm])
 router_orm.include_router(router=orm_admin_order_analysis, prefix="/admin/analysis",
                           tags=[Tags.admin_orm])
+router_orm.include_router(router=permissions_router, prefix="/admin", tags=[Tags.admin_orm])
 
 app.include_router(router)
 app.include_router(router_orm)

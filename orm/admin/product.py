@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Body, Query, HTTPException
+from fastapi import APIRouter, Body, Query, HTTPException, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import update
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from project.core.schemas import DataResponse, PageResponse
 from project.core.schemas import Sort
 from project.core.swagger import swagger_response
 
+from permissions import get_current_user
 
 class ProductReq(BaseModel):
     name: str = Field(...)
@@ -45,7 +46,8 @@ router = APIRouter()
         success_status_code=status.HTTP_201_CREATED
     )
 )
-async def create_product(product: ProductReq = Body(...)):
+async def create_product(product: ProductReq = Body(...),
+                         _username: str = Depends(get_current_user)):
     session: Session = SessionLocal()
     session.add(Products(
         name=product.name,
@@ -130,17 +132,17 @@ async def update_product(id: int, product: ProductReq):
     _rs = session.query(Products).filter(Products.product_id == id).first()
     if _rs == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    if product.name or product.price or product.category or product.quantityd
-    session.execute(update(Products).where(
-        Products.product_id == id
-    ).values(
-        description=product.description,
-        category=product.category,
-        name=product.name,
-        price=product.price,
-        quantity=product.quantity,
-        created_time=product.created_time
-    ))
+    if product.name or product.price or product.category or product.quantity:
+        session.execute(update(Products).where(
+            Products.product_id == id
+        ).values(
+            description=product.description,
+            category=product.category,
+            name=product.name,
+            price=product.price,
+            quantity=product.quantity,
+            created_time=product.created_time
+        ))
     session.commit()
     _rs = session.query(Products).filter(Products.product_id == id).first()
     return DataResponse(data=_rs)
