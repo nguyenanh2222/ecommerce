@@ -3,7 +3,7 @@ import math
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, selectinload
 from starlette import status
@@ -15,7 +15,10 @@ from project.core.swagger import swagger_response
 
 
 class OrderReq(BaseModel):
-    total_amount: Decimal = Field(...)
+    total_amount: Decimal = Field(
+        ...,
+        gt=0,
+    )
     time_open: datetime = Field(...)
     status: str = Field(...)
 
@@ -91,6 +94,7 @@ async def place_order(
 
 ):
     session: Session = SessionLocal()
+
     # insert into OrderItems
     _rs = session.query(
         Orders.order_id,
@@ -101,7 +105,9 @@ async def place_order(
         CartItems.price
     ).join(Cart, Orders.customer_id == Cart.customer_id).join(
         CartItems, CartItems.cart_id == Cart.cart_id).where(
-        Orders.customer_id == customer_id)
+        Orders.customer_id == customer_id
+    )
+
     list_cart_items = []
     for item in _rs:
         _dict_rs = dict(zip(
@@ -127,6 +133,7 @@ async def place_order(
     ).join(
         Orders, Orders.order_id == OrderItems.order_id
     ).filter(Orders.customer_id == customer_id)
+
     from_product = query.all()
     query = session.query(
         OrderItems.order_id, OrderItems.quantity
@@ -154,6 +161,7 @@ async def place_order(
 
     _rs = session.query(Orders).filter(
         Orders.customer_id == customer_id)
+
     return DataResponse(data=_rs.all())
 
 @router.post(
@@ -171,7 +179,13 @@ async def add_order(customer_id: int, order_req: OrderReq):
         time_open=order_req.time_open,
         total_amount=order_req.total_amount,
         status=order_req.status)
+    # if order.total_amount <= 0:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST
+    #     )
+    # - nghiep vu don gian dung schemal, phuc tap viet code
     session.add(order)
     session.commit()
     session.refresh(order)
     return DataResponse(data=order)
+

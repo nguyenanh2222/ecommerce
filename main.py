@@ -5,6 +5,7 @@ from fastapi import FastAPI, APIRouter
 from fastapi.responses import ORJSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
+from admin.sql_injected_api import router as sql_injected_api_router
 from admin.order import router as order_router
 from admin.product import router as product_admin_router
 from admin.analysis import router as analysis_admin_router
@@ -56,7 +57,7 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(router=product_admin_router, prefix="/products", tags=[Tags.admin])
 router.include_router(router=order_router, prefix="/orders", tags=[Tags.admin])
 
-
+router.include_router(router= sql_injected_api_router)
 router.include_router(router=product_customer_router, prefix="/customer/products", tags=[Tags.customer])
 router.include_router(router=customer_order_router, prefix="/customers/orders", tags=[Tags.customer])
 router.include_router(router=cart_router, prefix="/customers/cart", tags=[Tags.customer])
@@ -80,6 +81,7 @@ router_orm.include_router(router=orm_admin_order_router, prefix="/admin/orders",
                           tags=[Tags.admin_orm])
 router_orm.include_router(router=orm_admin_order_analysis, prefix="/admin/analysis",
                           tags=[Tags.admin_orm])
+
 
 app.include_router(router)
 app.include_router(router_orm)
