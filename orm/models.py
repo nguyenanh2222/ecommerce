@@ -38,6 +38,7 @@ class Products(Base):
     #     passive_deletes=True,
     # )
 
+
 class Cart(Base):
     __tablename__ = "cart"
 
@@ -103,3 +104,12 @@ class OrderItems(Base):
                             primary_key=True,
                             nullable=False)
     product = relationship("Products")
+
+
+class Permission(Base):
+    __tablename__ = "permission"
+    id = Column(Integer, primary_key=True,
+                nullable=False)
+    username = Column(String)
+    password = Column(String)
+    role = Column(String)

@@ -34,6 +34,7 @@ class CustomerUpdate(BaseModel):
     email: str = Field(None)
 
 
+
 router = APIRouter()
 
 
